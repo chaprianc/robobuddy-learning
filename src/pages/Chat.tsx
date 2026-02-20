@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Send, ArrowRight, Loader2, Mic, MicOff } from "lucide-react";
+import { Send, ArrowRight, Loader2, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import RoboAvatar from "@/components/RoboAvatar";
 import ChatBubble from "@/components/ChatBubble";
 import { useRobo } from "@/lib/robo-context";
@@ -10,9 +10,17 @@ import { supabase } from "@/integrations/supabase/client";
 type Msg = { role: "user" | "assistant"; content: string };
 
 const moduleGreetings: Record<string, string> = {
-  homework: "שלום! 📚 אני רובו. ספר לי מה השיעור שאתה צריך עזרה בו, ואני אעזור לך להבין שלב אחר שלב!",
+  math: "שלום! 🔢 אני רובו! בוא נתרגל חשבון ביחד. אני אתן לך תרגילים ואעזור לך להצליח! מוכן?",
+  reading: "שלום! 📖 אני רובו! בוא נקרא ונלמד מילים חדשות ביחד! מוכן להתחיל?",
   english: "Hi there! 🇬🇧 I'm Robo. Let's practice English together! What would you like to learn today?",
-  quiz: "מוכן לחידון? 🎮 אני אשאל אותך 5 שאלות. בוא נתחיל! \n\nבאיזה נושא תרצה לשחק?\n1. חשבון\n2. ידע כללי\n3. מדע\n4. מילים",
+  quiz: "מוכן לחידון? 🎮 אני אשאל אותך 5 שאלות. בוא נתחיל!\n\nבאיזה נושא תרצה לשחק?\n1. חשבון\n2. ידע כללי\n3. מדע\n4. מילים",
+};
+
+const moduleLabels: Record<string, string> = {
+  math: "חשבון",
+  reading: "קריאה",
+  english: "אנגלית",
+  quiz: "חידון ידע",
 };
 
 const Chat = () => {
@@ -22,8 +30,11 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isTalking, setIsTalking] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (!age || !module) {
@@ -32,11 +43,57 @@ const Chat = () => {
     }
     const greeting = moduleGreetings[module] || "היי! אני רובו 🤖";
     setMessages([{ role: "assistant", content: greeting }]);
+    // Speak greeting
+    if (autoSpeak) {
+      speakText(greeting);
+    }
   }, [age, module, navigate]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  const speakText = async (text: string) => {
+    try {
+      // Stop any playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setIsTalking(true);
+      const cleanText = text.replace(/[*#_~`>]/g, "").slice(0, 500);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/robo-tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text: cleanText }),
+        }
+      );
+      if (!response.ok) throw new Error("TTS failed");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => {
+        setIsTalking(false);
+        URL.revokeObjectURL(url);
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        setIsTalking(false);
+        audioRef.current = null;
+      };
+      await audio.play();
+    } catch (e) {
+      console.error("TTS error:", e);
+      setIsTalking(false);
+    }
+  };
 
   const sendMessage = async (text?: string) => {
     const msg = text || input.trim();
@@ -53,10 +110,15 @@ const Chat = () => {
         body: { messages: newMessages, age, module },
       });
       if (error) throw error;
-      setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+      const reply = data.reply;
+      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      if (autoSpeak) {
+        speakText(reply);
+      }
     } catch (e) {
       console.error("Chat error:", e);
-      setMessages((prev) => [...prev, { role: "assistant", content: "אופס, משהו השתבש 😅 בוא ננסה שוב!" }]);
+      const errMsg = "אופס, משהו השתבש 😅 בוא ננסה שוב!";
+      setMessages((prev) => [...prev, { role: "assistant", content: errMsg }]);
     } finally {
       setIsLoading(false);
     }
@@ -112,13 +174,27 @@ const Chat = () => {
         <button onClick={() => navigate("/menu")} className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowRight className="w-5 h-5" />
         </button>
-        <RoboAvatar size="sm" animate={false} isTalking={isLoading} />
-        <div>
+        <RoboAvatar size="sm" animate={false} isTalking={isTalking} />
+        <div className="flex-1">
           <p className="font-bold text-foreground text-sm">רובו 🤖</p>
           <p className="text-xs text-muted-foreground">
-            {module === "homework" ? "שיעורי בית" : module === "english" ? "אנגלית" : "משחק ידע"}
+            {moduleLabels[module || ""] || ""}
           </p>
         </div>
+        <button
+          onClick={() => {
+            setAutoSpeak(!autoSpeak);
+            if (autoSpeak && audioRef.current) {
+              audioRef.current.pause();
+              audioRef.current = null;
+              setIsTalking(false);
+            }
+          }}
+          className={`p-2 rounded-lg transition-colors ${autoSpeak ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+          title={autoSpeak ? "כבה קול" : "הפעל קול"}
+        >
+          {autoSpeak ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+        </button>
       </div>
 
       {/* Messages */}
@@ -145,6 +221,20 @@ const Chat = () => {
           <div className="flex items-center gap-2 bg-destructive/10 text-destructive rounded-full px-4 py-2 text-sm font-medium">
             <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
             מקשיב... דבר עכשיו!
+          </div>
+        </motion.div>
+      )}
+
+      {/* Talking indicator */}
+      {isTalking && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="px-4 pb-2 flex items-center justify-center gap-2"
+        >
+          <div className="flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-2 text-sm font-medium">
+            <Volume2 className="w-4 h-4 animate-pulse" />
+            רובו מדבר...
           </div>
         </motion.div>
       )}
