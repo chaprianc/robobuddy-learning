@@ -46,7 +46,11 @@ export const useRoboTTS = () => {
         const isQuestion = trimmed.endsWith("?");
         const isExclamation = trimmed.endsWith("!");
 
-        const utterance = new SpeechSynthesisUtterance(trimmed);
+        // Remove punctuation so it won't be read aloud
+        const spokenText = trimmed.replace(/[.!?,;:"""()–\-]/g, " ").replace(/\s{2,}/g, " ").trim();
+        if (!spokenText) return;
+
+        const utterance = new SpeechSynthesisUtterance(spokenText);
         utteranceRef.current = utterance;
 
         if (hebrewVoice) {

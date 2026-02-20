@@ -44,7 +44,10 @@ const ChatBubble = ({ message, isUser }: ChatBubbleProps) => {
       const isQuestion = trimmed.endsWith("?");
       const isExclamation = trimmed.endsWith("!");
 
-      const utterance = new SpeechSynthesisUtterance(trimmed);
+      const spokenText = trimmed.replace(/[.!?,;:"""()–\-]/g, " ").replace(/\s{2,}/g, " ").trim();
+      if (!spokenText) return;
+
+      const utterance = new SpeechSynthesisUtterance(spokenText);
       if (hebrewVoice) utterance.voice = hebrewVoice;
       utterance.lang = "he-IL";
       utterance.rate = isQuestion ? 0.7 : 0.75;
