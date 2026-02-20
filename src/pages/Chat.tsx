@@ -28,7 +28,7 @@ const moduleLabels: Record<string, string> = {
 };
 
 const Chat = () => {
-  const { age, module, difficulty, setModule, setDifficulty, setAge } = useRobo();
+  const { age, module, difficulty, setModule, setDifficulty, setAge, childId } = useRobo();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -58,7 +58,17 @@ const Chat = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-
+  // Save learning memory when leaving or switching modules
+  const saveMemory = useCallback(async (msgs: Msg[], currentStreak: number) => {
+    if (!childId || !module || msgs.length < 3) return;
+    try {
+      await supabase.functions.invoke("save-memory", {
+        body: { childId, module, messages: msgs, streak: currentStreak, difficulty },
+      });
+    } catch (e) {
+      console.error("Save memory error:", e);
+    }
+  }, [childId, module, difficulty]);
 
 
   const sendMessage = async (text?: string) => {
@@ -73,7 +83,7 @@ const Chat = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("robo-chat", {
-        body: { messages: newMessages, age, module, difficulty },
+        body: { messages: newMessages, age, module, difficulty, childId },
       });
       if (error) throw error;
       const reply = data.reply as string;
@@ -114,12 +124,14 @@ const Chat = () => {
   };
 
   const handleModuleSwitch = useCallback((newModule: string) => {
+    // Save memory for current module before switching
+    saveMemory(messages, streak);
     setModule(newModule as any);
     setStreak(0);
     const greeting = moduleGreetings[newModule] || "בוא נתחיל! 🚀";
     setMessages([{ role: "assistant", content: greeting }]);
     if (autoSpeak) speak(greeting);
-  }, [setModule, autoSpeak, speak]);
+  }, [setModule, autoSpeak, speak, saveMemory, messages, streak]);
 
   const toggleListening = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -168,7 +180,10 @@ const Chat = () => {
     <div className="h-screen flex flex-col bg-gradient-to-b from-background to-muted">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-card border-b border-border shadow-sm">
-        <button onClick={() => navigate(module === "free" ? "/" : "/menu")} className="text-muted-foreground hover:text-foreground transition-colors">
+        <button onClick={() => {
+          saveMemory(messages, streak);
+          navigate(module === "free" ? "/" : "/menu");
+        }} className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowRight className="w-5 h-5" />
         </button>
         <RoboAvatar size="sm" animate={false} isTalking={isTalking} />

@@ -49,6 +49,62 @@ export type Database = {
           },
         ]
       }
+      learning_memory: {
+        Row: {
+          child_id: string
+          created_at: string
+          favorite_topics: string[] | null
+          highest_streak: number | null
+          id: string
+          last_difficulty: string | null
+          module: string
+          strengths: string[] | null
+          summary: string
+          total_correct: number | null
+          total_wrong: number | null
+          updated_at: string
+          weaknesses: string[] | null
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          favorite_topics?: string[] | null
+          highest_streak?: number | null
+          id?: string
+          last_difficulty?: string | null
+          module: string
+          strengths?: string[] | null
+          summary?: string
+          total_correct?: number | null
+          total_wrong?: number | null
+          updated_at?: string
+          weaknesses?: string[] | null
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          favorite_topics?: string[] | null
+          highest_streak?: number | null
+          id?: string
+          last_difficulty?: string | null
+          module?: string
+          strengths?: string[] | null
+          summary?: string
+          total_correct?: number | null
+          total_wrong?: number | null
+          updated_at?: string
+          weaknesses?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_memory_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learning_sessions: {
         Row: {
           child_id: string

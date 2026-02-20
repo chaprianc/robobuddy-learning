@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -157,9 +158,40 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, age, module, difficulty } = await req.json();
+    const { messages, age, module, difficulty, childId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // Load learning memory for this child+module
+    let memoryContext = "";
+    if (childId) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const { data: memory } = await supabase
+          .from("learning_memory")
+          .select("*")
+          .eq("child_id", childId)
+          .eq("module", module)
+          .maybeSingle();
+        
+        if (memory) {
+          memoryContext = `\n\n--- זיכרון מפגשים קודמים ---
+סיכום אחרון: ${memory.summary}
+נקודות חוזק: ${(memory.strengths || []).join(", ") || "טרם זוהו"}
+נקודות לשיפור: ${(memory.weaknesses || []).join(", ") || "טרם זוהו"}
+נושאים אהובים: ${(memory.favorite_topics || []).join(", ") || "טרם זוהו"}
+סה"כ תשובות נכונות: ${memory.total_correct || 0}
+שיא רצף: ${memory.highest_streak || 0}
+רמת קושי אחרונה: ${memory.last_difficulty || "medium"}
+---
+השתמש במידע הזה כדי להתאים את השיחה! אם הילד התקשה בנושא מסוים, תרגל אותו. אם הוא אהב נושא, הזכר את זה. תגיד דברים כמו "בפעם שעברה הצלחת מעולה ב..." או "בוא נתרגל שוב את..." כדי שהילד ירגיש שאתה זוכר אותו!`;
+        }
+      } catch (e) {
+        console.error("Memory load error:", e);
+      }
+    }
 
     const difficultyMap: Record<string, string> = {
       easy: "קל — תן תרגילים פשוטים ובסיסיים, עודד הרבה",
@@ -170,7 +202,7 @@ serve(async (req) => {
 
     const systemPrompt = (systemPrompts[module] || systemPrompts.math) +
       `\nהילד בן ${age}. רמת קושי: ${difficultyInstruction}.
-חשוב: אתה רוצה שהילד ייהנה ויירצה להמשיך ללמוד! תהיה משעשע, חם ומעודד.`;
+חשוב: אתה רוצה שהילד ייהנה ויירצה להמשיך ללמוד! תהיה משעשע, חם ומעודד.` + memoryContext;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.robo-tts]
 verify_jwt = false
+
+[functions.save-memory]
+verify_jwt = false
