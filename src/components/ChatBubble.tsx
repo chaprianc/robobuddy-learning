@@ -1,22 +1,35 @@
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { Volume2, Loader2 } from "lucide-react";
+import { Volume2, Loader2, BookOpen, Calculator, Languages, HelpCircle } from "lucide-react";
 import { useState, useCallback } from "react";
 
 interface ChatBubbleProps {
   message: string;
   isUser: boolean;
+  onModuleSwitch?: (module: string) => void;
 }
 
-const ChatBubble = ({ message, isUser }: ChatBubbleProps) => {
+const moduleButtons: Record<string, { label: string; icon: React.ReactNode }> = {
+  math: { label: "בוא נתרגל חשבון! 🔢", icon: <Calculator className="w-4 h-4" /> },
+  reading: { label: "בוא נקרא ביחד! 📖", icon: <BookOpen className="w-4 h-4" /> },
+  english: { label: "Let's learn English! 🇬🇧", icon: <Languages className="w-4 h-4" /> },
+  quiz: { label: "בוא לחידון ידע! 🎮", icon: <HelpCircle className="w-4 h-4" /> },
+};
+
+const ChatBubble = ({ message, isUser, onModuleSwitch }: ChatBubbleProps) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Extract module suggestion tag
+  const moduleMatch = message.match(/\[MODULE:(math|reading|english|quiz)\]/);
+  const suggestedModule = moduleMatch ? moduleMatch[1] : null;
+  const displayMessage = message.replace(/\[MODULE:(math|reading|english|quiz)\]/g, "").trim();
 
   const speak = useCallback(() => {
     if (isSpeaking) return;
     window.speechSynthesis.cancel();
     setIsSpeaking(true);
 
-    let cleanText = message
+    let cleanText = displayMessage
       .replace(/[*#_~`>]/g, "")
       .replace(/\n{2,}/g, ". ")
       .replace(/\n/g, ", ")
@@ -63,7 +76,7 @@ const ChatBubble = ({ message, isUser }: ChatBubbleProps) => {
       }, delay);
     };
     speakNext(0);
-  }, [message, isSpeaking]);
+  }, [displayMessage, isSpeaking]);
 
   return (
     <motion.div
@@ -88,8 +101,21 @@ const ChatBubble = ({ message, isUser }: ChatBubbleProps) => {
             return <code className="font-mono bg-black/5 px-1 rounded text-sm">{children}</code>;
           }
         }}>
-          {message}
+          {displayMessage}
         </ReactMarkdown>
+
+        {suggestedModule && onModuleSwitch && moduleButtons[suggestedModule] && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            onClick={() => onModuleSwitch(suggestedModule)}
+            className="mt-3 flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-bold hover:opacity-90 transition-opacity w-full justify-center"
+          >
+            {moduleButtons[suggestedModule].icon}
+            {moduleButtons[suggestedModule].label}
+          </motion.button>
+        )}
 
         {!isUser && (
           <button

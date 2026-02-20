@@ -27,7 +27,7 @@ const moduleLabels: Record<string, string> = {
 };
 
 const Chat = () => {
-  const { age, module, difficulty } = useRobo();
+  const { age, module, difficulty, setModule, setDifficulty } = useRobo();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -86,6 +86,11 @@ const Chat = () => {
       setIsLoading(false);
     }
   };
+
+  const handleModuleSwitch = useCallback((newModule: string) => {
+    setModule(newModule as any);
+    navigate("/menu");
+  }, [setModule, navigate]);
 
   const toggleListening = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -161,7 +166,7 @@ const Chat = () => {
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
         {messages.map((msg, i) => (
-          <ChatBubble key={i} message={msg.content} isUser={msg.role === "user"} />
+          <ChatBubble key={i} message={msg.content} isUser={msg.role === "user"} onModuleSwitch={module === "free" ? handleModuleSwitch : undefined} />
         ))}
         {isLoading && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-end mb-3">
