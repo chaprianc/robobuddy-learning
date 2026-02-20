@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import RoboAvatar from "@/components/RoboAvatar";
 import { useRobo } from "@/lib/robo-context";
 import { useRoboTTS } from "@/hooks/use-robo-tts";
@@ -14,6 +14,39 @@ const ageGroups = [
 
 const GREETING = "היי! שלום לך! אני רובו, החבר שלך ללימודים! בוא נלמד משהו מגניב היום! קודם כל, ספר לי, בן כמה אתה?";
 
+const playLandingSound = () => {
+  try {
+    const ctx = new AudioContext();
+    // Impact thud
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(150, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.2);
+
+    // Bounce boing
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(300, ctx.currentTime + 0.15);
+    osc2.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.25);
+    osc2.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.35);
+    gain2.gain.setValueAtTime(0, ctx.currentTime);
+    gain2.gain.setValueAtTime(0.25, ctx.currentTime + 0.15);
+    gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+    osc2.connect(gain2).connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.15);
+    osc2.stop(ctx.currentTime + 0.4);
+  } catch (e) {
+    // Audio not supported, skip silently
+  }
+};
+
 const Index = () => {
   const { setAge } = useRobo();
   const navigate = useNavigate();
@@ -22,12 +55,14 @@ const Index = () => {
   const [showButtons, setShowButtons] = useState(false);
 
   useEffect(() => {
+    // Play landing sound when Robo lands (~0.7s into animation)
+    const tSound = setTimeout(() => playLandingSound(), 700);
     const t1 = setTimeout(() => {
       setShowGreeting(true);
       speak(GREETING);
-    }, 600);
-    const t2 = setTimeout(() => setShowButtons(true), 1800);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    }, 1000);
+    const t2 = setTimeout(() => setShowButtons(true), 2000);
+    return () => { clearTimeout(tSound); clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   const handleAge = (val: typeof ageGroups[number]["value"]) => {
