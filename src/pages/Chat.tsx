@@ -15,6 +15,7 @@ const moduleGreetings: Record<string, string> = {
   reading: "שלום! 📖 אני רובו! בוא נקרא ונלמד מילים חדשות ביחד! מוכן להתחיל?",
   english: "Hi there! 🇬🇧 I'm Robo. Let's practice English together! What would you like to learn today?",
   quiz: "מוכן לחידון? 🎮 אני אשאל אותך 5 שאלות. בוא נתחיל!\n\nבאיזה נושא תרצה לשחק?\n1. חשבון\n2. ידע כללי\n3. מדע\n4. מילים",
+  free: "היי חבר! 😊 מה קורה? אני רובו! על מה בא לך לדבר? אפשר על הכל — לימודים, בדיחות, שאלות, או סתם לשוחח! 🤖",
 };
 
 const moduleLabels: Record<string, string> = {
@@ -22,6 +23,7 @@ const moduleLabels: Record<string, string> = {
   reading: "קריאה",
   english: "אנגלית",
   quiz: "חידון ידע",
+  free: "שיחה חופשית 🎤",
 };
 
 const Chat = () => {
@@ -37,7 +39,7 @@ const Chat = () => {
   const { isTalking, speak, stop } = useRoboTTS();
 
   useEffect(() => {
-    if (!age || !module) {
+    if (!module) {
       navigate("/");
       return;
     }
@@ -132,7 +134,7 @@ const Chat = () => {
     <div className="h-screen flex flex-col bg-gradient-to-b from-background to-muted">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-card border-b border-border shadow-sm">
-        <button onClick={() => navigate("/menu")} className="text-muted-foreground hover:text-foreground transition-colors">
+        <button onClick={() => navigate(module === "free" ? "/" : "/menu")} className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowRight className="w-5 h-5" />
         </button>
         <RoboAvatar size="sm" animate={false} isTalking={isTalking} />

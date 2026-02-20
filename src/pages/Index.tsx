@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
+import { Mic, MicOff } from "lucide-react";
 import RoboAvatar from "@/components/RoboAvatar";
 import { useRobo } from "@/lib/robo-context";
 import { useRoboTTS } from "@/hooks/use-robo-tts";
@@ -48,14 +49,13 @@ const playLandingSound = () => {
 };
 
 const Index = () => {
-  const { setAge } = useRobo();
+  const { setAge, setModule } = useRobo();
   const navigate = useNavigate();
   const { isTalking, speak } = useRoboTTS();
   const [showGreeting, setShowGreeting] = useState(false);
   const [showButtons, setShowButtons] = useState(false);
 
   useEffect(() => {
-    // Play landing sound when Robo lands (~0.7s into animation)
     const tSound = setTimeout(() => playLandingSound(), 700);
     const t1 = setTimeout(() => {
       setShowGreeting(true);
@@ -68,6 +68,12 @@ const Index = () => {
   const handleAge = (val: typeof ageGroups[number]["value"]) => {
     setAge(val);
     navigate("/menu");
+  };
+
+  const handleFreeChat = () => {
+    setAge("7-9"); // default age for free chat
+    setModule("free");
+    navigate("/chat");
   };
 
   return (
@@ -144,6 +150,28 @@ const Index = () => {
                 <span>{g.label}</span>
               </motion.button>
             ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Free chat mic button */}
+      <AnimatePresence>
+        {showButtons && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, type: "spring", bounce: 0.4 }}
+            className="mt-6"
+          >
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleFreeChat}
+              className="bg-accent text-accent-foreground rounded-full px-6 py-3 shadow-lg flex items-center gap-2 font-bold text-base border border-border hover:shadow-xl transition-shadow"
+            >
+              <Mic className="w-5 h-5" />
+              דבר איתי חופשי! 🎤
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
