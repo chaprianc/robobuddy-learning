@@ -16,7 +16,7 @@ const moduleGreetings: Record<string, string> = {
   reading: "שלום! 📖 אני רובו! בוא נקרא ונלמד מילים חדשות ביחד! מוכן להתחיל?",
   english: "Hi there! 🇬🇧 I'm Robo. Let's practice English together! What would you like to learn today?",
   quiz: "מוכן לחידון? 🎮 אני אשאל אותך 5 שאלות. בוא נתחיל!\n\nבאיזה נושא תרצה לשחק?\n1. חשבון\n2. ידע כללי\n3. מדע\n4. מילים",
-  free: "היי חבר! 😊 מה קורה? אני רובו! על מה בא לך לדבר? אפשר על הכל — לימודים, בדיחות, שאלות, או סתם לשוחח! 🤖",
+  free: "היי חבר! 😊 אני רובו! בן כמה אתה? ספר לי ואני אדאג שנלמד בדיוק מה שמתאים לך! 🤖",
 };
 
 const moduleLabels: Record<string, string> = {
@@ -28,7 +28,7 @@ const moduleLabels: Record<string, string> = {
 };
 
 const Chat = () => {
-  const { age, module, difficulty, setModule, setDifficulty } = useRobo();
+  const { age, module, difficulty, setModule, setDifficulty, setAge } = useRobo();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -78,6 +78,16 @@ const Chat = () => {
       if (error) throw error;
       const reply = data.reply as string;
       
+      // Detect age tag
+      const ageMatch = reply.match(/\[AGE:(\d+)\]/);
+      if (ageMatch) {
+        const ageNum = parseInt(ageMatch[1]);
+        if (ageNum <= 6) setAge("5-6");
+        else if (ageNum <= 9) setAge("7-9");
+        else if (ageNum <= 12) setAge("10-12");
+        else setAge("13-14");
+      }
+
       // Detect streak tags
       if (reply.includes("[CORRECT]")) {
         setStreak(prev => {
@@ -105,8 +115,11 @@ const Chat = () => {
 
   const handleModuleSwitch = useCallback((newModule: string) => {
     setModule(newModule as any);
-    navigate("/menu");
-  }, [setModule, navigate]);
+    setStreak(0);
+    const greeting = moduleGreetings[newModule] || "בוא נתחיל! 🚀";
+    setMessages([{ role: "assistant", content: greeting }]);
+    if (autoSpeak) speak(greeting);
+  }, [setModule, autoSpeak, speak]);
 
   const toggleListening = useCallback(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;

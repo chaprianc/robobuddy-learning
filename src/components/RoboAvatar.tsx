@@ -1,151 +1,163 @@
 import { motion } from "framer-motion";
 
 interface RoboAvatarProps {
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   animate?: boolean;
   isTalking?: boolean;
 }
 
-const sizeValues = { sm: 96, md: 176, lg: 256 };
-const sizeClasses = { sm: "w-24 h-24", md: "w-44 h-44", lg: "w-64 h-64" };
+const sizeClasses = {
+  sm: "w-16 h-16",
+  md: "w-32 h-32",
+  lg: "w-48 h-48",
+  xl: "w-64 h-64",
+};
 
 const RoboAvatar = ({ size = "md", animate = true, isTalking = false }: RoboAvatarProps) => {
-  const s = sizeValues[size];
-
   return (
     <motion.div
       className={`${sizeClasses[size]} relative`}
-      animate={animate ? { y: [0, -8, 0] } : undefined}
+      animate={animate ? { y: [0, -6, 0] } : undefined}
       transition={animate ? { duration: 3, repeat: Infinity, ease: "easeInOut" } : undefined}
     >
-      <svg viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-lg">
+      <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-xl">
+        {/* Glow behind */}
+        <circle cx="100" cy="100" r="90" fill="hsl(210, 80%, 55%)" opacity="0.08" />
+
         {/* Antenna */}
         <motion.g
-          animate={animate ? { rotate: [0, 8, -8, 0] } : undefined}
-          transition={animate ? { duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 } : undefined}
-          style={{ originX: "100px", originY: "45px", transformOrigin: "100px 45px" }}
+          animate={animate ? { rotate: [0, 10, -10, 0] } : undefined}
+          transition={animate ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : undefined}
+          style={{ transformOrigin: "100px 35px" }}
         >
-          <line x1="100" y1="45" x2="100" y2="20" stroke="hsl(210, 80%, 55%)" strokeWidth="4" strokeLinecap="round" />
-          <circle cx="100" cy="16" r="6" fill="hsl(210, 80%, 55%)">
-            <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" />
+          <line x1="100" y1="35" x2="100" y2="12" stroke="hsl(45, 95%, 60%)" strokeWidth="4" strokeLinecap="round" />
+          <circle cx="100" cy="9" r="7" fill="hsl(45, 95%, 60%)">
+            <animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite" />
           </circle>
+          <circle cx="100" cy="9" r="4" fill="hsl(45, 95%, 75%)" />
         </motion.g>
 
-        {/* Head - round */}
-        <circle cx="100" cy="77" r="50" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="2" />
+        {/* Main head - big rounded square */}
+        <rect x="28" y="30" width="144" height="120" rx="40" fill="hsl(210, 80%, 55%)" />
+        <rect x="34" y="36" width="132" height="108" rx="36" fill="hsl(210, 85%, 62%)" />
         
-        {/* Face plate - round */}
-        <circle cx="100" cy="77" r="36" fill="hsl(210, 80%, 25%)" />
+        {/* Face screen */}
+        <rect x="42" y="44" width="116" height="80" rx="28" fill="hsl(220, 30%, 18%)" />
+        <rect x="46" y="48" width="108" height="72" rx="24" fill="hsl(220, 35%, 22%)" />
 
         {/* Left eye */}
         <g>
-          <circle cx="82" cy="72" r="10" fill="white" />
-          <circle cx="82" cy="72" r="5" fill="hsl(210, 80%, 55%)">
-            <animate attributeName="r" values="5;5;5;5;5" dur="4s" repeatCount="indefinite" />
+          <circle cx="74" cy="78" r="16" fill="white" />
+          <circle cx="74" cy="78" r="9" fill="hsl(160, 60%, 45%)">
+            <animate attributeName="r" values="9;8;9" dur="3s" repeatCount="indefinite" />
           </circle>
-          {/* Blink overlay */}
-          <rect x="72" y="62" width="20" height="20" rx="10" fill="hsl(210, 80%, 25%)">
+          <circle cx="74" cy="78" r="4" fill="hsl(220, 35%, 22%)" />
+          {/* Blink */}
+          <rect x="58" y="62" width="32" height="32" rx="16" fill="hsl(220, 35%, 22%)">
             <animate
               attributeName="height"
-              values="0;0;0;0;0;0;0;0;20;0;0;0;0;0;0;0;0;0;0;20;0"
-              dur="4s"
+              values="0;0;0;0;0;0;0;32;0;0;0;0;0;0;0;0;32;0;0;0"
+              dur="5s"
               repeatCount="indefinite"
             />
             <animate
               attributeName="y"
-              values="72;72;72;72;72;72;72;72;62;72;72;72;72;72;72;72;72;72;72;62;72"
-              dur="4s"
+              values="78;78;78;78;78;78;78;62;78;78;78;78;78;78;78;78;62;78;78;78"
+              dur="5s"
               repeatCount="indefinite"
             />
           </rect>
-          {/* Eye shine */}
-          <circle cx="79" cy="69" r="2" fill="white" opacity="0.8" />
+          {/* Shine */}
+          <circle cx="69" cy="72" r="4" fill="white" opacity="0.9" />
+          <circle cx="79" cy="84" r="2" fill="white" opacity="0.5" />
         </g>
 
         {/* Right eye */}
         <g>
-          <circle cx="118" cy="72" r="10" fill="white" />
-          <circle cx="118" cy="72" r="5" fill="hsl(210, 80%, 55%)">
-            <animate attributeName="r" values="5;5;5;5;5" dur="4s" repeatCount="indefinite" />
+          <circle cx="126" cy="78" r="16" fill="white" />
+          <circle cx="126" cy="78" r="9" fill="hsl(160, 60%, 45%)">
+            <animate attributeName="r" values="9;8;9" dur="3s" repeatCount="indefinite" />
           </circle>
-          {/* Blink overlay */}
-          <rect x="108" y="62" width="20" height="20" rx="10" fill="hsl(210, 80%, 25%)">
+          <circle cx="126" cy="78" r="4" fill="hsl(220, 35%, 22%)" />
+          {/* Blink */}
+          <rect x="110" y="62" width="32" height="32" rx="16" fill="hsl(220, 35%, 22%)">
             <animate
               attributeName="height"
-              values="0;0;0;0;0;0;0;0;20;0;0;0;0;0;0;0;0;0;0;20;0"
-              dur="4s"
+              values="0;0;0;0;0;0;0;32;0;0;0;0;0;0;0;0;32;0;0;0"
+              dur="5s"
               repeatCount="indefinite"
             />
             <animate
               attributeName="y"
-              values="72;72;72;72;72;72;72;72;62;72;72;72;72;72;72;72;72;72;72;62;72"
-              dur="4s"
+              values="78;78;78;78;78;78;78;62;78;78;78;78;78;78;78;78;62;78;78;78"
+              dur="5s"
               repeatCount="indefinite"
             />
           </rect>
-          {/* Eye shine */}
-          <circle cx="115" cy="69" r="2" fill="white" opacity="0.8" />
+          {/* Shine */}
+          <circle cx="121" cy="72" r="4" fill="white" opacity="0.9" />
+          <circle cx="131" cy="84" r="2" fill="white" opacity="0.5" />
         </g>
 
         {/* Mouth */}
         {isTalking ? (
-          <ellipse cx="100" cy="91" rx="10" ry="5" fill="hsl(0, 80%, 65%)">
-            <animate attributeName="ry" values="5;2;7;3;5;8;4;5" dur="0.4s" repeatCount="indefinite" />
-            <animate attributeName="rx" values="10;8;12;9;10;11;8;10" dur="0.4s" repeatCount="indefinite" />
-          </ellipse>
+          <g>
+            <ellipse cx="100" cy="104" rx="14" ry="7" fill="hsl(0, 75%, 60%)">
+              <animate attributeName="ry" values="7;3;9;4;7;10;5;7" dur="0.35s" repeatCount="indefinite" />
+              <animate attributeName="rx" values="14;10;16;11;14;15;10;14" dur="0.35s" repeatCount="indefinite" />
+            </ellipse>
+            <ellipse cx="100" cy="101" rx="8" ry="3" fill="hsl(0, 75%, 75%)" opacity="0.5">
+              <animate attributeName="ry" values="3;1;4;2;3" dur="0.35s" repeatCount="indefinite" />
+            </ellipse>
+          </g>
         ) : (
-          <path d="M88 88 Q100 98 112 88" stroke="hsl(0, 80%, 65%)" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <path d="M85 100 Q100 114 115 100" stroke="hsl(160, 60%, 50%)" strokeWidth="3.5" strokeLinecap="round" fill="none" />
         )}
 
-        {/* Blush */}
-        <circle cx="72" cy="85" r="5" fill="hsl(0, 80%, 80%)" opacity="0.5" />
-        <circle cx="128" cy="85" r="5" fill="hsl(0, 80%, 80%)" opacity="0.5" />
+        {/* Cheek blush */}
+        <circle cx="56" cy="98" r="8" fill="hsl(340, 80%, 75%)" opacity="0.35" />
+        <circle cx="144" cy="98" r="8" fill="hsl(340, 80%, 75%)" opacity="0.35" />
 
-        {/* Ear left */}
-        <circle cx="44" cy="77" r="10" fill="hsl(210, 80%, 55%)" />
-        {/* Ear right */}
-        <circle cx="156" cy="77" r="10" fill="hsl(210, 80%, 55%)" />
+        {/* Side ears/speakers */}
+        <rect x="16" y="65" width="14" height="30" rx="7" fill="hsl(210, 80%, 48%)" />
+        <rect x="170" y="65" width="14" height="30" rx="7" fill="hsl(210, 80%, 48%)" />
+        <rect x="19" y="72" width="8" height="4" rx="2" fill="hsl(210, 80%, 65%)" />
+        <rect x="19" y="80" width="8" height="4" rx="2" fill="hsl(210, 80%, 65%)" />
+        <rect x="173" y="72" width="8" height="4" rx="2" fill="hsl(210, 80%, 65%)" />
+        <rect x="173" y="80" width="8" height="4" rx="2" fill="hsl(210, 80%, 65%)" />
 
-        {/* Body - round */}
-        <ellipse cx="100" cy="155" rx="44" ry="34" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="2" />
+        {/* Body */}
+        <rect x="55" y="148" width="90" height="38" rx="16" fill="hsl(210, 80%, 55%)" />
+        <rect x="60" y="153" width="80" height="28" rx="12" fill="hsl(210, 85%, 62%)" />
         
-        {/* Chest light */}
-        <circle cx="100" cy="145" r="10" fill="hsl(210, 80%, 90%)" stroke="hsl(210, 80%, 55%)" strokeWidth="2">
-          <animate attributeName="fill" values="hsl(210,80%,90%);hsl(210,80%,70%);hsl(210,80%,90%)" dur="3s" repeatCount="indefinite" />
+        {/* Chest buttons */}
+        <circle cx="85" cy="167" r="5" fill="hsl(0, 75%, 60%)">
+          <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" />
         </circle>
-        <circle cx="100" cy="145" r="4" fill="hsl(210, 80%, 55%)">
-          <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
+        <circle cx="100" cy="167" r="5" fill="hsl(45, 95%, 60%)">
+          <animate attributeName="opacity" values="0.7;1;0.7" dur="2.5s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="115" cy="167" r="5" fill="hsl(160, 60%, 45%)">
+          <animate attributeName="opacity" values="0.7;1;0.7" dur="3s" repeatCount="indefinite" />
         </circle>
 
-        {/* Left arm — waving! */}
+        {/* Left arm — waving */}
         <motion.g
-          animate={animate ? { rotate: [0, -25, 0, -25, 0] } : undefined}
-          transition={animate ? { duration: 2.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 3 } : undefined}
-          style={{ transformOrigin: "55px 130px" }}
+          animate={animate ? { rotate: [0, -20, 10, -20, 0] } : undefined}
+          transition={animate ? { duration: 2, repeat: Infinity, ease: "easeInOut", repeatDelay: 4 } : undefined}
+          style={{ transformOrigin: "55px 155px" }}
         >
-          <rect x="30" y="125" width="30" height="14" rx="7" fill="hsl(210, 80%, 55%)" />
-          {/* Hand */}
-          <circle cx="28" cy="132" r="9" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="2" />
-          {/* Fingers */}
-          <rect x="20" y="124" width="4" height="8" rx="2" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="1" />
-          <rect x="25" y="121" width="4" height="10" rx="2" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="1" />
-          <rect x="30" y="122" width="4" height="9" rx="2" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="1" />
+          <rect x="28" y="152" width="30" height="12" rx="6" fill="hsl(210, 80%, 48%)" />
+          <circle cx="27" cy="158" r="8" fill="hsl(210, 85%, 62%)" stroke="hsl(210, 80%, 48%)" strokeWidth="2" />
         </motion.g>
 
         {/* Right arm */}
-        <rect x="140" y="125" width="30" height="14" rx="7" fill="hsl(210, 80%, 55%)" />
-        <circle cx="172" cy="132" r="9" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="2" />
+        <rect x="142" y="152" width="30" height="12" rx="6" fill="hsl(210, 80%, 48%)" />
+        <circle cx="173" cy="158" r="8" fill="hsl(210, 85%, 62%)" stroke="hsl(210, 80%, 48%)" strokeWidth="2" />
 
-        {/* Legs */}
-        <rect x="76" y="186" width="16" height="20" rx="8" fill="hsl(210, 25%, 40%)" />
-        <rect x="108" y="186" width="16" height="20" rx="8" fill="hsl(210, 25%, 40%)" />
-        
         {/* Feet */}
-        <ellipse cx="80" cy="208" rx="14" ry="6" fill="hsl(210, 80%, 55%)" />
-        <ellipse cx="120" cy="208" rx="14" ry="6" fill="hsl(210, 80%, 55%)" />
-
-        {/* Shadow */}
-        <ellipse cx="100" cy="215" rx="40" ry="5" fill="hsl(210, 20%, 80%)" opacity="0.3" />
+        <rect x="66" y="184" width="22" height="12" rx="6" fill="hsl(210, 80%, 48%)" />
+        <rect x="112" y="184" width="22" height="12" rx="6" fill="hsl(210, 80%, 48%)" />
       </svg>
     </motion.div>
   );
