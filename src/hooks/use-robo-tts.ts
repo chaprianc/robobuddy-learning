@@ -22,8 +22,8 @@ export const useRoboTTS = () => {
         utterance.voice = hebrewVoice;
       }
       utterance.lang = "he-IL";
-      utterance.rate = 0.9;
-      utterance.pitch = 1.2; // Slightly higher for a friendly kid-like tone
+      utterance.rate = 0.75; // Slower for kids to follow easily
+      utterance.pitch = 1.5; // Higher pitch — friendly, childlike tone
       
       utterance.onend = () => {
         setIsTalking(false);
