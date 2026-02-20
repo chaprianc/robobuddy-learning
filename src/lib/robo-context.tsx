@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 type AgeGroup = "5-6" | "7-9" | "10-12" | "13-14" | null;
-type Module = "math" | "reading" | "english" | "quiz" | null;
+type Module = "math" | "reading" | "english" | "quiz" | "free" | null;
 type Difficulty = "easy" | "medium" | "hard" | null;
 
 interface RoboContextType {
