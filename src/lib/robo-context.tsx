@@ -10,6 +10,8 @@ interface RoboContextType {
   setModule: (module: Module) => void;
   score: number;
   addScore: (points: number) => void;
+  childId: string | null;
+  setChildId: (id: string | null) => void;
 }
 
 const RoboContext = createContext<RoboContextType | undefined>(undefined);
@@ -18,9 +20,10 @@ export const RoboProvider = ({ children }: { children: ReactNode }) => {
   const [age, setAge] = useState<AgeGroup>(null);
   const [module, setModule] = useState<Module>(null);
   const [score, setScore] = useState(0);
+  const [childId, setChildId] = useState<string | null>(null);
 
   return (
-    <RoboContext.Provider value={{ age, setAge, module, setModule, score, addScore: (p) => setScore((s) => s + p) }}>
+    <RoboContext.Provider value={{ age, setAge, module, setModule, score, addScore: (p) => setScore((s) => s + p), childId, setChildId }}>
       {children}
     </RoboContext.Provider>
   );
