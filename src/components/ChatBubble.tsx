@@ -20,13 +20,14 @@ const ChatBubble = ({ message, isUser }: ChatBubbleProps) => {
       .replace(/[*#_~`>]/g, "")
       .replace(/\n{2,}/g, ". ")
       .replace(/\n/g, ", ")
-      .replace(/(\d+)\./g, "$1,")
-      .replace(/([א-ת])(\?)/g, "$1 $2")
-      .replace(/([א-ת])(!)/g, "$1 $2")
-      .replace(/😊|🎉|🌟|💪|🔢|📖|🇬🇧|🎮|🤖|👋|✨|😅|🤔|👨‍👩‍👧/g, "")
+      .replace(/(\d+)\.\s/g, "$1: ")
+      .replace(/\(([^)]+)\)/g, ", $1, ")
+      .replace(/[-–—]/g, ", ")
+      .replace(/["""]/g, "")
+      .replace(/[^\u0590-\u05FFa-zA-Z0-9\s.!?,:']/g, "")
       .replace(/\s{2,}/g, " ")
       .trim()
-      .slice(0, 600);
+      .slice(0, 800);
 
     if (cleanText && !/[.!?]$/.test(cleanText)) cleanText += ".";
 
@@ -34,29 +35,34 @@ const ChatBubble = ({ message, isUser }: ChatBubbleProps) => {
     const voices = window.speechSynthesis.getVoices();
     const hebrewVoice = voices.find(v => v.lang.startsWith("he"));
 
-    let completed = 0;
-    const total = sentences.length;
-
-    sentences.forEach((sentence) => {
-      const trimmed = sentence.trim();
-      if (!trimmed) return;
-
+    const validSentences: { text: string; isQuestion: boolean; isExclamation: boolean }[] = [];
+    for (const s of sentences) {
+      const trimmed = s.trim();
+      if (!trimmed) continue;
       const isQuestion = trimmed.endsWith("?");
       const isExclamation = trimmed.endsWith("!");
+      const spokenText = trimmed.replace(/[.!?,;:]/g, " ").replace(/\s{2,}/g, " ").trim();
+      if (spokenText.length > 1) validSentences.push({ text: spokenText, isQuestion, isExclamation });
+    }
 
-      const spokenText = trimmed.replace(/[.!?,;:"""()–\-]/g, " ").replace(/\s{2,}/g, " ").trim();
-      if (!spokenText) return;
+    if (validSentences.length === 0) { setIsSpeaking(false); return; }
 
-      const utterance = new SpeechSynthesisUtterance(spokenText);
-      if (hebrewVoice) utterance.voice = hebrewVoice;
-      utterance.lang = "he-IL";
-      utterance.rate = isQuestion ? 0.7 : 0.75;
-      utterance.pitch = isQuestion ? 1.8 : isExclamation ? 1.6 : 1.5;
-
-      utterance.onend = () => { completed++; if (completed >= total) setIsSpeaking(false); };
-      utterance.onerror = () => { completed++; if (completed >= total) setIsSpeaking(false); };
-      window.speechSynthesis.speak(utterance);
-    });
+    const speakNext = (i: number) => {
+      if (i >= validSentences.length) { setIsSpeaking(false); return; }
+      const { text, isQuestion, isExclamation } = validSentences[i];
+      const delay = i === 0 ? 0 : 300;
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        if (hebrewVoice) utterance.voice = hebrewVoice;
+        utterance.lang = "he-IL";
+        utterance.pitch = isQuestion ? 1.8 : isExclamation ? 1.6 : 1.5;
+        utterance.rate = isQuestion ? 0.7 : isExclamation ? 0.8 : 0.75;
+        utterance.onend = () => speakNext(i + 1);
+        utterance.onerror = () => speakNext(i + 1);
+        window.speechSynthesis.speak(utterance);
+      }, delay);
+    };
+    speakNext(0);
   }, [message, isSpeaking]);
 
   return (

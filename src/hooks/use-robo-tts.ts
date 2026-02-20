@@ -6,86 +6,97 @@ export const useRoboTTS = () => {
 
   const speak = useCallback(async (text: string) => {
     try {
-      // Stop any current speech
       window.speechSynthesis.cancel();
-      
       setIsTalking(true);
 
-      // Clean markdown and normalize punctuation for natural speech
       let cleanText = text
-        .replace(/[*#_~`>]/g, "")        // Remove markdown
-        .replace(/\n{2,}/g, ". ")         // Double newlines → pause
-        .replace(/\n/g, ", ")             // Single newlines → short pause
-        .replace(/\.{3,}/g, "... ")       // Normalize ellipsis
-        .replace(/!{2,}/g, "! ")          // Multiple exclamation → single
-        .replace(/\?{2,}/g, "? ")         // Multiple question → single
-        .replace(/(\d+)\./g, "$1,")       // "1." list items → comma pause
-        .replace(/😊|🎉|🌟|💪|🔢|📖|🇬🇧|🎮|🤖|👋|✨|😅|🤔|👨‍👩‍👧/g, "") // Remove emojis
-        .replace(/\s{2,}/g, " ")          // Collapse multiple spaces
+        .replace(/[*#_~`>]/g, "")
+        .replace(/\n{2,}/g, ". ")
+        .replace(/\n/g, ", ")
+        .replace(/\.{3,}/g, ". ")
+        .replace(/!{2,}/g, "! ")
+        .replace(/\?{2,}/g, "? ")
+        .replace(/(\d+)\.\s/g, "$1: ")        // "1. item" → "1: item" (no "נקודה")
+        .replace(/\(([^)]+)\)/g, ", $1, ")     // Parentheses → natural pauses
+        .replace(/[-–—]/g, ", ")               // Dashes → pause
+        .replace(/["""]/g, "")                 // Remove quotes
+        .replace(/[^\u0590-\u05FFa-zA-Z0-9\s.!?,:']/g, "") // Remove emojis & symbols
+        .replace(/\s{2,}/g, " ")
         .trim()
-        .slice(0, 600);
+        .slice(0, 800);
 
-      // Ensure text ends with punctuation for proper intonation
-      if (cleanText && !/[.!?]$/.test(cleanText)) {
-        cleanText += ".";
-      }
+      if (cleanText && !/[.!?]$/.test(cleanText)) cleanText += ".";
 
-      // Split into sentences to apply different intonation per sentence type
+      // Split into sentences, keeping the delimiter
       const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
 
       const voices = window.speechSynthesis.getVoices();
       const hebrewVoice = voices.find(v => v.lang.startsWith("he"));
 
       let completed = 0;
-      const total = sentences.length;
+      const validSentences: { text: string; isQuestion: boolean; isExclamation: boolean }[] = [];
 
-      sentences.forEach((sentence, index) => {
+      for (const sentence of sentences) {
         const trimmed = sentence.trim();
-        if (!trimmed) return;
-
+        if (!trimmed) continue;
         const isQuestion = trimmed.endsWith("?");
         const isExclamation = trimmed.endsWith("!");
-
-        // Remove punctuation so it won't be read aloud
-        const spokenText = trimmed.replace(/[.!?,;:"""()–\-]/g, " ").replace(/\s{2,}/g, " ").trim();
-        if (!spokenText) return;
-
-        const utterance = new SpeechSynthesisUtterance(spokenText);
-        utteranceRef.current = utterance;
-
-        if (hebrewVoice) {
-          utterance.voice = hebrewVoice;
+        // Strip punctuation from spoken text
+        const spokenText = trimmed
+          .replace(/[.!?,;:]/g, " ")
+          .replace(/\s{2,}/g, " ")
+          .trim();
+        if (spokenText.length > 1) {
+          validSentences.push({ text: spokenText, isQuestion, isExclamation });
         }
-        utterance.lang = "he-IL";
-        utterance.rate = 0.75;
+      }
 
-        // Raise pitch for questions, slightly higher for exclamations, normal for statements
-        if (isQuestion) {
-          utterance.pitch = 1.8;   // Rising intonation for questions
-          utterance.rate = 0.7;    // Slightly slower for clarity
-        } else if (isExclamation) {
-          utterance.pitch = 1.6;   // Excited tone
-        } else {
-          utterance.pitch = 1.5;   // Normal friendly tone
+      if (validSentences.length === 0) {
+        setIsTalking(false);
+        return;
+      }
+
+      const total = validSentences.length;
+
+      // Speak sentences sequentially with pauses between them
+      const speakNext = (index: number) => {
+        if (index >= total) {
+          setIsTalking(false);
+          utteranceRef.current = null;
+          return;
         }
 
-        utterance.onend = () => {
-          completed++;
-          if (completed >= total) {
-            setIsTalking(false);
-            utteranceRef.current = null;
-          }
-        };
-        utterance.onerror = () => {
-          completed++;
-          if (completed >= total) {
-            setIsTalking(false);
-            utteranceRef.current = null;
-          }
-        };
+        const { text: spokenText, isQuestion, isExclamation } = validSentences[index];
 
-        window.speechSynthesis.speak(utterance);
-      });
+        // Add a small silence pause between sentences for natural rhythm
+        const delay = index === 0 ? 0 : 300;
+
+        setTimeout(() => {
+          const utterance = new SpeechSynthesisUtterance(spokenText);
+          utteranceRef.current = utterance;
+
+          if (hebrewVoice) utterance.voice = hebrewVoice;
+          utterance.lang = "he-IL";
+
+          if (isQuestion) {
+            utterance.pitch = 1.8;
+            utterance.rate = 0.7;
+          } else if (isExclamation) {
+            utterance.pitch = 1.6;
+            utterance.rate = 0.8;
+          } else {
+            utterance.pitch = 1.5;
+            utterance.rate = 0.75;
+          }
+
+          utterance.onend = () => speakNext(index + 1);
+          utterance.onerror = () => speakNext(index + 1);
+
+          window.speechSynthesis.speak(utterance);
+        }, delay);
+      };
+
+      speakNext(0);
     } catch (e) {
       console.error("TTS error:", e);
       setIsTalking(false);
