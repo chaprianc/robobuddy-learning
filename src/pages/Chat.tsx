@@ -25,7 +25,7 @@ const moduleLabels: Record<string, string> = {
 };
 
 const Chat = () => {
-  const { age, module } = useRobo();
+  const { age, module, difficulty } = useRobo();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -68,7 +68,7 @@ const Chat = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("robo-chat", {
-        body: { messages: newMessages, age, module },
+        body: { messages: newMessages, age, module, difficulty },
       });
       if (error) throw error;
       const reply = data.reply;
