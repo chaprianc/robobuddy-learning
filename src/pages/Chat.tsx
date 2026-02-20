@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Send, ArrowRight, Loader2 } from "lucide-react";
+import { Send, ArrowRight, Loader2, Mic, MicOff } from "lucide-react";
 import RoboAvatar from "@/components/RoboAvatar";
 import ChatBubble from "@/components/ChatBubble";
 import { useRobo } from "@/lib/robo-context";
@@ -21,7 +21,9 @@ const Chat = () => {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
     if (!age || !module) {
@@ -36,10 +38,11 @@ const Chat = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async (text?: string) => {
+    const msg = text || input.trim();
+    if (!msg || isLoading) return;
 
-    const userMsg: Msg = { role: "user", content: input.trim() };
+    const userMsg: Msg = { role: "user", content: msg };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput("");
@@ -49,9 +52,7 @@ const Chat = () => {
       const { data, error } = await supabase.functions.invoke("robo-chat", {
         body: { messages: newMessages, age, module },
       });
-
       if (error) throw error;
-
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
     } catch (e) {
       console.error("Chat error:", e);
@@ -60,6 +61,49 @@ const Chat = () => {
       setIsLoading(false);
     }
   };
+
+  const toggleListening = useCallback(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("הדפדפן שלך לא תומך בזיהוי דיבור. נסה Chrome.");
+      return;
+    }
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = module === "english" ? "en-US" : "he-IL";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+
+    recognition.onstart = () => setIsListening(true);
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const last = event.results[event.results.length - 1];
+      const transcript = last[0].transcript;
+      if (last.isFinal) {
+        setInput("");
+        sendMessage(transcript);
+        setIsListening(false);
+      } else {
+        setInput(transcript);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech error:", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  }, [isListening, module, messages, age, isLoading]);
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-b from-background to-muted">
@@ -91,6 +135,20 @@ const Chat = () => {
         )}
       </div>
 
+      {/* Listening indicator */}
+      {isListening && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="px-4 pb-2 flex items-center justify-center gap-2"
+        >
+          <div className="flex items-center gap-2 bg-destructive/10 text-destructive rounded-full px-4 py-2 text-sm font-medium">
+            <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
+            מקשיב... דבר עכשיו!
+          </div>
+        </motion.div>
+      )}
+
       {/* Input */}
       <div className="px-4 py-3 bg-card border-t border-border">
         <form
@@ -107,6 +165,18 @@ const Chat = () => {
             className="flex-1 bg-muted rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             disabled={isLoading}
           />
+          <button
+            type="button"
+            onClick={toggleListening}
+            disabled={isLoading}
+            className={`rounded-xl p-3 transition-all ${
+              isListening
+                ? "bg-destructive text-destructive-foreground animate-pulse-glow"
+                : "bg-secondary text-secondary-foreground hover:opacity-90"
+            } disabled:opacity-40`}
+          >
+            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          </button>
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
