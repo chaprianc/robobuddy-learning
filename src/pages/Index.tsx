@@ -37,12 +37,25 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-gradient-to-b from-background to-muted overflow-hidden">
-      {/* Robo - hero size */}
+      {/* Robo - dramatic landing */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.5, y: 40 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+        initial={{ opacity: 0, scale: 0.3, y: -300, rotate: -15 }}
+        animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
+        transition={{
+          duration: 0.9,
+          type: "spring",
+          bounce: 0.5,
+          stiffness: 120,
+          damping: 10,
+        }}
       >
+        {/* Landing dust effect */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: [0, 0.6, 0], scale: [0, 1.5, 2] }}
+          transition={{ delay: 0.7, duration: 0.6 }}
+          className="absolute inset-0 rounded-full bg-primary/10 blur-xl pointer-events-none"
+        />
         <RoboAvatar size="lg" isTalking={isTalking} />
       </motion.div>
 
