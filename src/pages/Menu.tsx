@@ -13,7 +13,7 @@ const Menu = () => {
     if (!age) navigate("/");
   }, [age, navigate]);
 
-  const go = (mod: "homework" | "english" | "quiz") => {
+  const go = (mod: "math" | "reading" | "english" | "quiz") => {
     setModule(mod);
     navigate("/chat");
   };
@@ -28,20 +28,21 @@ const Menu = () => {
         transition={{ delay: 0.3 }}
         className="mt-4 mb-8 text-lg font-semibold text-foreground text-center"
       >
-        מה תרצה לעשות היום? 😊
+        מה תרצה ללמוד היום? 😊
       </motion.p>
 
       <div className="w-full max-w-sm space-y-4">
-        <ModuleCard icon="📚" title="שיעורי בית" description="רובו יעזור לך להבין ולפתור" onClick={() => go("homework")} delay={0.4} />
-        <ModuleCard icon="🇬🇧" title="אנגלית" description="בוא נתרגל מילים ומשפטים" onClick={() => go("english")} delay={0.5} />
-        <ModuleCard icon="🎮" title="משחק ידע" description="חידון כיף עם 5 שאלות" onClick={() => go("quiz")} delay={0.6} />
+        <ModuleCard icon="🔢" title="חשבון" description="חיבור, חיסור, כפל ועוד תרגילים" onClick={() => go("math")} delay={0.4} />
+        <ModuleCard icon="📖" title="קריאה בעברית" description="אותיות, מילים ומשפטים" onClick={() => go("reading")} delay={0.5} />
+        <ModuleCard icon="🇬🇧" title="אנגלית" description="מילים ומשפטים באנגלית" onClick={() => go("english")} delay={0.6} />
+        <ModuleCard icon="🎮" title="חידון ידע" description="חידון כיף עם 5 שאלות" onClick={() => go("quiz")} delay={0.7} />
       </div>
 
       <div className="flex gap-4 mt-8">
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 0.9 }}
           onClick={() => navigate("/")}
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
@@ -50,7 +51,7 @@ const Menu = () => {
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.9 }}
+          transition={{ delay: 1.0 }}
           onClick={() => navigate("/parent/auth")}
           className="text-sm text-primary hover:opacity-80 transition-opacity font-medium"
         >
