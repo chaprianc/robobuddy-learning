@@ -72,27 +72,31 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-gradient-to-b from-background to-muted overflow-hidden">
-      {/* Robo - dramatic landing */}
+      {/* Robo - drop & bounce */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.3, y: -300, rotate: -15 }}
-        animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
+        initial={{ opacity: 0, y: -400 }}
+        animate={{ 
+          opacity: [0, 1, 1, 1, 1, 1],
+          y: [-400, 0, -60, 0, -20, 0],
+          scaleY: [1, 0.85, 1.1, 0.95, 1.02, 1],
+          scaleX: [1, 1.15, 0.95, 1.05, 0.98, 1],
+        }}
         transition={{
-          duration: 0.9,
-          type: "spring",
-          bounce: 0.5,
-          stiffness: 120,
-          damping: 10,
+          duration: 1.2,
+          times: [0, 0.35, 0.55, 0.7, 0.85, 1],
+          ease: "easeOut",
         }}
       >
-        {/* Landing dust effect */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: [0, 0.6, 0], scale: [0, 1.5, 2] }}
-          transition={{ delay: 0.7, duration: 0.6 }}
-          className="absolute inset-0 rounded-full bg-primary/10 blur-xl pointer-events-none"
-        />
         <RoboAvatar size="lg" isTalking={isTalking} />
       </motion.div>
+
+      {/* Landing dust rings */}
+      <motion.div
+        initial={{ opacity: 0, scaleX: 0.3, scaleY: 0.1 }}
+        animate={{ opacity: [0, 0.5, 0], scaleX: [0.3, 1.5, 2], scaleY: [0.1, 0.3, 0.1] }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="w-64 h-16 -mt-4 rounded-[50%] bg-primary/15 blur-md pointer-events-none"
+      />
 
       {/* Speech bubble */}
       <AnimatePresence>
