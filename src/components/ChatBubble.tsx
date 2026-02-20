@@ -22,7 +22,11 @@ const ChatBubble = ({ message, isUser, onModuleSwitch }: ChatBubbleProps) => {
   // Extract module suggestion tag
   const moduleMatch = message.match(/\[MODULE:(math|reading|english|quiz)\]/);
   const suggestedModule = moduleMatch ? moduleMatch[1] : null;
-  const displayMessage = message.replace(/\[MODULE:(math|reading|english|quiz)\]/g, "").trim();
+  const displayMessage = message
+    .replace(/\[MODULE:(math|reading|english|quiz)\]/g, "")
+    .replace(/\[CORRECT\]/g, "")
+    .replace(/\[WRONG\]/g, "")
+    .trim();
 
   const speak = useCallback(() => {
     if (isSpeaking) return;

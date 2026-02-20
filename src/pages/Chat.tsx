@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Send, ArrowRight, Loader2, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import RoboAvatar from "@/components/RoboAvatar";
 import ChatBubble from "@/components/ChatBubble";
+import StreakCounter from "@/components/StreakCounter";
 import { useRobo } from "@/lib/robo-context";
 import { useRoboTTS } from "@/hooks/use-robo-tts";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +38,8 @@ const Chat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { isTalking, speak, stop } = useRoboTTS();
+  const [streak, setStreak] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
     if (!module) {
@@ -73,7 +76,20 @@ const Chat = () => {
         body: { messages: newMessages, age, module, difficulty },
       });
       if (error) throw error;
-      const reply = data.reply;
+      const reply = data.reply as string;
+      
+      // Detect streak tags
+      if (reply.includes("[CORRECT]")) {
+        setStreak(prev => {
+          const next = prev + 1;
+          setShowCelebration(true);
+          setTimeout(() => setShowCelebration(false), 1500);
+          return next;
+        });
+      } else if (reply.includes("[WRONG]")) {
+        setStreak(0);
+      }
+      
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
       if (autoSpeak) {
         speak(reply);
@@ -149,6 +165,7 @@ const Chat = () => {
             {moduleLabels[module || ""] || ""}
           </p>
         </div>
+        {module !== "free" && <StreakCounter streak={streak} showCelebration={showCelebration} />}
         <button
           onClick={() => {
             setAutoSpeak(!autoSpeak);
