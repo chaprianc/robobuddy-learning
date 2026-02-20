@@ -11,35 +11,35 @@ interface ChatBubbleProps {
 const ChatBubble = ({ message, isUser }: ChatBubbleProps) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const speak = useCallback(async () => {
+  const speak = useCallback(() => {
     if (isSpeaking) return;
+    window.speechSynthesis.cancel();
     setIsSpeaking(true);
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/robo-tts`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ text: message.replace(/[*#_~`>]/g, "").slice(0, 500) }),
-        }
-      );
-      if (!response.ok) throw new Error("TTS failed");
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.onended = () => {
-        setIsSpeaking(false);
-        URL.revokeObjectURL(url);
-      };
-      await audio.play();
-    } catch (e) {
-      console.error("TTS error:", e);
-      setIsSpeaking(false);
-    }
+
+    let cleanText = message
+      .replace(/[*#_~`>]/g, "")
+      .replace(/\n{2,}/g, ". ")
+      .replace(/\n/g, ", ")
+      .replace(/(\d+)\./g, "$1,")
+      .replace(/([א-ת])(\?)/g, "$1 $2")
+      .replace(/([א-ת])(!)/g, "$1 $2")
+      .replace(/😊|🎉|🌟|💪|🔢|📖|🇬🇧|🎮|🤖|👋|✨|😅|🤔|👨‍👩‍👧/g, "")
+      .replace(/\s{2,}/g, " ")
+      .trim()
+      .slice(0, 600);
+
+    if (cleanText && !/[.!?]$/.test(cleanText)) cleanText += ".";
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    const voices = window.speechSynthesis.getVoices();
+    const hebrewVoice = voices.find(v => v.lang.startsWith("he"));
+    if (hebrewVoice) utterance.voice = hebrewVoice;
+    utterance.lang = "he-IL";
+    utterance.rate = 0.75;
+    utterance.pitch = 1.5;
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
   }, [message, isSpeaking]);
 
   return (
