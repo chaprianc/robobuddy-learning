@@ -114,12 +114,19 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, age, module } = await req.json();
+    const { messages, age, module, difficulty } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const difficultyMap: Record<string, string> = {
+      easy: "קל — תן תרגילים פשוטים ובסיסיים, עודד הרבה",
+      medium: "בינוני — תן תרגילים ברמה סטנדרטית מותאמת גיל",
+      hard: "קשה — תן תרגילים מאתגרים, מעל הרמה הרגילה לגיל",
+    };
+    const difficultyInstruction = difficultyMap[difficulty] || difficultyMap.medium;
+
     const systemPrompt = (systemPrompts[module] || systemPrompts.math) +
-      `\nהילד בן ${age}. התאם את רמת הקושי בהתאם.
+      `\nהילד בן ${age}. רמת קושי: ${difficultyInstruction}.
 חשוב: אתה רוצה שהילד ייהנה ויירצה להמשיך ללמוד! תהיה משעשע, חם ומעודד.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
