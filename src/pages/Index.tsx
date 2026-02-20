@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import RoboAvatar from "@/components/RoboAvatar";
 import { useRobo } from "@/lib/robo-context";
+import { useRoboTTS } from "@/hooks/use-robo-tts";
 
 const ageGroups = [
   { label: "5–6", value: "5-6" as const },
@@ -10,9 +12,17 @@ const ageGroups = [
   { label: "13–14", value: "13-14" as const },
 ];
 
+const GREETING = "היי! אני רובו, חבר הלמידה שלך! בן כמה אתה?";
+
 const Index = () => {
   const { setAge } = useRobo();
   const navigate = useNavigate();
+  const { isTalking, speak } = useRoboTTS();
+
+  useEffect(() => {
+    const timer = setTimeout(() => speak(GREETING), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleAge = (val: typeof ageGroups[number]["value"]) => {
     setAge(val);
@@ -27,7 +37,7 @@ const Index = () => {
         transition={{ duration: 0.6 }}
         className="flex flex-col items-center"
       >
-        <RoboAvatar size="lg" />
+        <RoboAvatar size="lg" isTalking={isTalking} />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

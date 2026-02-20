@@ -1,16 +1,25 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import RoboAvatar from "@/components/RoboAvatar";
 import ModuleCard from "@/components/ModuleCard";
 import { useRobo } from "@/lib/robo-context";
-import { useEffect } from "react";
+import { useRoboTTS } from "@/hooks/use-robo-tts";
+
+const MENU_GREETING = "מעולה! אז מה תרצה ללמוד היום? יש חשבון, קריאה, אנגלית או חידון ידע!";
 
 const Menu = () => {
   const navigate = useNavigate();
   const { age, setModule } = useRobo();
+  const { isTalking, speak } = useRoboTTS();
 
   useEffect(() => {
-    if (!age) navigate("/");
+    if (!age) {
+      navigate("/");
+      return;
+    }
+    const timer = setTimeout(() => speak(MENU_GREETING), 500);
+    return () => clearTimeout(timer);
   }, [age, navigate]);
 
   const go = (mod: "math" | "reading" | "english" | "quiz") => {
@@ -20,7 +29,7 @@ const Menu = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center px-6 py-10 bg-gradient-to-b from-background to-muted">
-      <RoboAvatar size="md" />
+      <RoboAvatar size="md" isTalking={isTalking} />
 
       <motion.p
         initial={{ opacity: 0 }}
