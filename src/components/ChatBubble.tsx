@@ -79,7 +79,15 @@ const ChatBubble = ({ message, isUser }: ChatBubbleProps) => {
             : "bg-bubble-bot text-bubble-bot-foreground rounded-bl-sm border border-border"
         }`}
       >
-        <ReactMarkdown components={{ p: ({ children }) => <p className="m-0">{children}</p> }}>
+        <ReactMarkdown components={{
+          p: ({ children }) => <p className="m-0">{children}</p>,
+          pre: ({ children }) => <pre dir="ltr" className="my-2 bg-black/5 rounded-lg p-3 overflow-x-auto text-left">{children}</pre>,
+          code: ({ children, className }) => {
+            const isBlock = className || (typeof children === 'string' && children.includes('\n'));
+            if (isBlock) return <code className="font-mono text-sm whitespace-pre">{children}</code>;
+            return <code className="font-mono bg-black/5 px-1 rounded text-sm">{children}</code>;
+          }
+        }}>
           {message}
         </ReactMarkdown>
 
