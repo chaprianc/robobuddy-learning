@@ -30,16 +30,30 @@ const ChatBubble = ({ message, isUser }: ChatBubbleProps) => {
 
     if (cleanText && !/[.!?]$/.test(cleanText)) cleanText += ".";
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
+    const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
     const voices = window.speechSynthesis.getVoices();
     const hebrewVoice = voices.find(v => v.lang.startsWith("he"));
-    if (hebrewVoice) utterance.voice = hebrewVoice;
-    utterance.lang = "he-IL";
-    utterance.rate = 0.75;
-    utterance.pitch = 1.5;
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
+
+    let completed = 0;
+    const total = sentences.length;
+
+    sentences.forEach((sentence) => {
+      const trimmed = sentence.trim();
+      if (!trimmed) return;
+
+      const isQuestion = trimmed.endsWith("?");
+      const isExclamation = trimmed.endsWith("!");
+
+      const utterance = new SpeechSynthesisUtterance(trimmed);
+      if (hebrewVoice) utterance.voice = hebrewVoice;
+      utterance.lang = "he-IL";
+      utterance.rate = isQuestion ? 0.7 : 0.75;
+      utterance.pitch = isQuestion ? 1.8 : isExclamation ? 1.6 : 1.5;
+
+      utterance.onend = () => { completed++; if (completed >= total) setIsSpeaking(false); };
+      utterance.onerror = () => { completed++; if (completed >= total) setIsSpeaking(false); };
+      window.speechSynthesis.speak(utterance);
+    });
   }, [message, isSpeaking]);
 
   return (
