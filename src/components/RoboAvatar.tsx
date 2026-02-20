@@ -5,8 +5,8 @@ interface RoboAvatarProps {
   animate?: boolean;
 }
 
-const sizeValues = { sm: 64, md: 128, lg: 192 };
-const sizeClasses = { sm: "w-16 h-16", md: "w-32 h-32", lg: "w-48 h-48" };
+const sizeValues = { sm: 96, md: 176, lg: 256 };
+const sizeClasses = { sm: "w-24 h-24", md: "w-44 h-44", lg: "w-64 h-64" };
 
 const RoboAvatar = ({ size = "md", animate = true }: RoboAvatarProps) => {
   const s = sizeValues[size];
@@ -30,11 +30,11 @@ const RoboAvatar = ({ size = "md", animate = true }: RoboAvatarProps) => {
           </circle>
         </motion.g>
 
-        {/* Head */}
-        <rect x="50" y="40" width="100" height="75" rx="20" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="2" />
+        {/* Head - round */}
+        <circle cx="100" cy="77" r="50" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="2" />
         
-        {/* Face plate */}
-        <rect x="60" y="50" width="80" height="50" rx="14" fill="hsl(210, 80%, 25%)" />
+        {/* Face plate - round */}
+        <circle cx="100" cy="77" r="36" fill="hsl(210, 80%, 25%)" />
 
         {/* Left eye */}
         <g>
@@ -94,12 +94,12 @@ const RoboAvatar = ({ size = "md", animate = true }: RoboAvatarProps) => {
         <circle cx="128" cy="85" r="5" fill="hsl(0, 80%, 80%)" opacity="0.5" />
 
         {/* Ear left */}
-        <rect x="38" y="60" width="16" height="24" rx="6" fill="hsl(210, 80%, 55%)" />
+        <circle cx="44" cy="77" r="10" fill="hsl(210, 80%, 55%)" />
         {/* Ear right */}
-        <rect x="146" y="60" width="16" height="24" rx="6" fill="hsl(210, 80%, 55%)" />
+        <circle cx="156" cy="77" r="10" fill="hsl(210, 80%, 55%)" />
 
-        {/* Body */}
-        <rect x="60" y="120" width="80" height="60" rx="16" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="2" />
+        {/* Body - round */}
+        <ellipse cx="100" cy="155" rx="44" ry="34" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="2" />
         
         {/* Chest light */}
         <circle cx="100" cy="145" r="10" fill="hsl(210, 80%, 90%)" stroke="hsl(210, 80%, 55%)" strokeWidth="2">
@@ -129,12 +129,12 @@ const RoboAvatar = ({ size = "md", animate = true }: RoboAvatarProps) => {
         <circle cx="172" cy="132" r="9" fill="white" stroke="hsl(210, 25%, 88%)" strokeWidth="2" />
 
         {/* Legs */}
-        <rect x="72" y="178" width="16" height="24" rx="8" fill="hsl(210, 25%, 40%)" />
-        <rect x="112" y="178" width="16" height="24" rx="8" fill="hsl(210, 25%, 40%)" />
+        <rect x="76" y="186" width="16" height="20" rx="8" fill="hsl(210, 25%, 40%)" />
+        <rect x="108" y="186" width="16" height="20" rx="8" fill="hsl(210, 25%, 40%)" />
         
         {/* Feet */}
-        <rect x="66" y="198" width="28" height="12" rx="6" fill="hsl(210, 80%, 55%)" />
-        <rect x="106" y="198" width="28" height="12" rx="6" fill="hsl(210, 80%, 55%)" />
+        <ellipse cx="80" cy="208" rx="14" ry="6" fill="hsl(210, 80%, 55%)" />
+        <ellipse cx="120" cy="208" rx="14" ry="6" fill="hsl(210, 80%, 55%)" />
 
         {/* Shadow */}
         <ellipse cx="100" cy="215" rx="40" ry="5" fill="hsl(210, 20%, 80%)" opacity="0.3" />
