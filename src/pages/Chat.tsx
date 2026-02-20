@@ -5,6 +5,7 @@ import { Send, ArrowRight, Loader2, Mic, MicOff, Volume2, VolumeX } from "lucide
 import RoboAvatar from "@/components/RoboAvatar";
 import ChatBubble from "@/components/ChatBubble";
 import { useRobo } from "@/lib/robo-context";
+import { useRoboTTS } from "@/hooks/use-robo-tts";
 import { supabase } from "@/integrations/supabase/client";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -30,11 +31,10 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isTalking, setIsTalking] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { isTalking, speak, stop } = useRoboTTS();
 
   useEffect(() => {
     if (!age || !module) {
@@ -45,7 +45,7 @@ const Chat = () => {
     setMessages([{ role: "assistant", content: greeting }]);
     // Speak greeting
     if (autoSpeak) {
-      speakText(greeting);
+      speak(greeting);
     }
   }, [age, module, navigate]);
 
@@ -53,47 +53,8 @@ const Chat = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const speakText = async (text: string) => {
-    try {
-      // Stop any playing audio
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      setIsTalking(true);
-      const cleanText = text.replace(/[*#_~`>]/g, "").slice(0, 500);
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/robo-tts`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ text: cleanText }),
-        }
-      );
-      if (!response.ok) throw new Error("TTS failed");
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => {
-        setIsTalking(false);
-        URL.revokeObjectURL(url);
-        audioRef.current = null;
-      };
-      audio.onerror = () => {
-        setIsTalking(false);
-        audioRef.current = null;
-      };
-      await audio.play();
-    } catch (e) {
-      console.error("TTS error:", e);
-      setIsTalking(false);
-    }
-  };
+
+
 
   const sendMessage = async (text?: string) => {
     const msg = text || input.trim();
@@ -113,7 +74,7 @@ const Chat = () => {
       const reply = data.reply;
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
       if (autoSpeak) {
-        speakText(reply);
+        speak(reply);
       }
     } catch (e) {
       console.error("Chat error:", e);
@@ -184,10 +145,8 @@ const Chat = () => {
         <button
           onClick={() => {
             setAutoSpeak(!autoSpeak);
-            if (autoSpeak && audioRef.current) {
-              audioRef.current.pause();
-              audioRef.current = null;
-              setIsTalking(false);
+            if (autoSpeak) {
+              stop();
             }
           }}
           className={`p-2 rounded-lg transition-colors ${autoSpeak ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
