@@ -26,6 +26,7 @@ const ChatBubble = ({ message, isUser, onModuleSwitch }: ChatBubbleProps) => {
     .replace(/\[MODULE:(math|reading|english|quiz)\]/g, "")
     .replace(/\[CORRECT\]/g, "")
     .replace(/\[WRONG\]/g, "")
+    .replace(/\[AGE:\d+\]/g, "")
     .trim();
 
   const speak = useCallback(() => {
