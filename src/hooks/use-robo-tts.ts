@@ -20,8 +20,6 @@ export const useRoboTTS = () => {
         .replace(/!{2,}/g, "! ")          // Multiple exclamation → single
         .replace(/\?{2,}/g, "? ")         // Multiple question → single
         .replace(/(\d+)\./g, "$1,")       // "1." list items → comma pause
-        .replace(/([א-ת])(\?)/g, "$1 $2") // Space before ? for Hebrew
-        .replace(/([א-ת])(!)/g, "$1 $2")  // Space before ! for Hebrew  
         .replace(/😊|🎉|🌟|💪|🔢|📖|🇬🇧|🎮|🤖|👋|✨|😅|🤔|👨‍👩‍👧/g, "") // Remove emojis
         .replace(/\s{2,}/g, " ")          // Collapse multiple spaces
         .trim()
@@ -31,30 +29,59 @@ export const useRoboTTS = () => {
       if (cleanText && !/[.!?]$/.test(cleanText)) {
         cleanText += ".";
       }
-      
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utteranceRef.current = utterance;
-      
-      // Try to find a Hebrew voice, fallback to default
+
+      // Split into sentences to apply different intonation per sentence type
+      const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
+
       const voices = window.speechSynthesis.getVoices();
       const hebrewVoice = voices.find(v => v.lang.startsWith("he"));
-      if (hebrewVoice) {
-        utterance.voice = hebrewVoice;
-      }
-      utterance.lang = "he-IL";
-      utterance.rate = 0.75;
-      utterance.pitch = 1.5;
-      
-      utterance.onend = () => {
-        setIsTalking(false);
-        utteranceRef.current = null;
-      };
-      utterance.onerror = () => {
-        setIsTalking(false);
-        utteranceRef.current = null;
-      };
-      
-      window.speechSynthesis.speak(utterance);
+
+      let completed = 0;
+      const total = sentences.length;
+
+      sentences.forEach((sentence, index) => {
+        const trimmed = sentence.trim();
+        if (!trimmed) return;
+
+        const isQuestion = trimmed.endsWith("?");
+        const isExclamation = trimmed.endsWith("!");
+
+        const utterance = new SpeechSynthesisUtterance(trimmed);
+        utteranceRef.current = utterance;
+
+        if (hebrewVoice) {
+          utterance.voice = hebrewVoice;
+        }
+        utterance.lang = "he-IL";
+        utterance.rate = 0.75;
+
+        // Raise pitch for questions, slightly higher for exclamations, normal for statements
+        if (isQuestion) {
+          utterance.pitch = 1.8;   // Rising intonation for questions
+          utterance.rate = 0.7;    // Slightly slower for clarity
+        } else if (isExclamation) {
+          utterance.pitch = 1.6;   // Excited tone
+        } else {
+          utterance.pitch = 1.5;   // Normal friendly tone
+        }
+
+        utterance.onend = () => {
+          completed++;
+          if (completed >= total) {
+            setIsTalking(false);
+            utteranceRef.current = null;
+          }
+        };
+        utterance.onerror = () => {
+          completed++;
+          if (completed >= total) {
+            setIsTalking(false);
+            utteranceRef.current = null;
+          }
+        };
+
+        window.speechSynthesis.speak(utterance);
+      });
     } catch (e) {
       console.error("TTS error:", e);
       setIsTalking(false);
