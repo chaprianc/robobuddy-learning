@@ -10,7 +10,27 @@ export const useRoboTTS = () => {
       window.speechSynthesis.cancel();
       
       setIsTalking(true);
-      const cleanText = text.replace(/[*#_~`>]/g, "").replace(/\n/g, ". ").slice(0, 500);
+
+      // Clean markdown and normalize punctuation for natural speech
+      let cleanText = text
+        .replace(/[*#_~`>]/g, "")        // Remove markdown
+        .replace(/\n{2,}/g, ". ")         // Double newlines → pause
+        .replace(/\n/g, ", ")             // Single newlines → short pause
+        .replace(/\.{3,}/g, "... ")       // Normalize ellipsis
+        .replace(/!{2,}/g, "! ")          // Multiple exclamation → single
+        .replace(/\?{2,}/g, "? ")         // Multiple question → single
+        .replace(/(\d+)\./g, "$1,")       // "1." list items → comma pause
+        .replace(/([א-ת])(\?)/g, "$1 $2") // Space before ? for Hebrew
+        .replace(/([א-ת])(!)/g, "$1 $2")  // Space before ! for Hebrew  
+        .replace(/😊|🎉|🌟|💪|🔢|📖|🇬🇧|🎮|🤖|👋|✨|😅|🤔|👨‍👩‍👧/g, "") // Remove emojis
+        .replace(/\s{2,}/g, " ")          // Collapse multiple spaces
+        .trim()
+        .slice(0, 600);
+
+      // Ensure text ends with punctuation for proper intonation
+      if (cleanText && !/[.!?]$/.test(cleanText)) {
+        cleanText += ".";
+      }
       
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utteranceRef.current = utterance;
@@ -22,8 +42,8 @@ export const useRoboTTS = () => {
         utterance.voice = hebrewVoice;
       }
       utterance.lang = "he-IL";
-      utterance.rate = 0.75; // Slower for kids to follow easily
-      utterance.pitch = 1.5; // Higher pitch — friendly, childlike tone
+      utterance.rate = 0.75;
+      utterance.pitch = 1.5;
       
       utterance.onend = () => {
         setIsTalking(false);
