@@ -3,12 +3,13 @@ import { motion } from "framer-motion";
 interface RoboAvatarProps {
   size?: "sm" | "md" | "lg";
   animate?: boolean;
+  isTalking?: boolean;
 }
 
 const sizeValues = { sm: 96, md: 176, lg: 256 };
 const sizeClasses = { sm: "w-24 h-24", md: "w-44 h-44", lg: "w-64 h-64" };
 
-const RoboAvatar = ({ size = "md", animate = true }: RoboAvatarProps) => {
+const RoboAvatar = ({ size = "md", animate = true, isTalking = false }: RoboAvatarProps) => {
   const s = sizeValues[size];
 
   return (
@@ -86,8 +87,15 @@ const RoboAvatar = ({ size = "md", animate = true }: RoboAvatarProps) => {
           <circle cx="115" cy="69" r="2" fill="white" opacity="0.8" />
         </g>
 
-        {/* Smile */}
-        <path d="M88 88 Q100 98 112 88" stroke="hsl(0, 80%, 65%)" strokeWidth="3" strokeLinecap="round" fill="none" />
+        {/* Mouth */}
+        {isTalking ? (
+          <ellipse cx="100" cy="91" rx="10" ry="5" fill="hsl(0, 80%, 65%)">
+            <animate attributeName="ry" values="5;2;7;3;5;8;4;5" dur="0.4s" repeatCount="indefinite" />
+            <animate attributeName="rx" values="10;8;12;9;10;11;8;10" dur="0.4s" repeatCount="indefinite" />
+          </ellipse>
+        ) : (
+          <path d="M88 88 Q100 98 112 88" stroke="hsl(0, 80%, 65%)" strokeWidth="3" strokeLinecap="round" fill="none" />
+        )}
 
         {/* Blush */}
         <circle cx="72" cy="85" r="5" fill="hsl(0, 80%, 80%)" opacity="0.5" />

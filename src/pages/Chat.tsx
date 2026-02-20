@@ -112,7 +112,7 @@ const Chat = () => {
         <button onClick={() => navigate("/menu")} className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowRight className="w-5 h-5" />
         </button>
-        <RoboAvatar size="sm" animate={false} />
+        <RoboAvatar size="sm" animate={false} isTalking={isLoading} />
         <div>
           <p className="font-bold text-foreground text-sm">רובו 🤖</p>
           <p className="text-xs text-muted-foreground">
