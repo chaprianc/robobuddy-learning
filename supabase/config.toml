@@ -1,1 +1,7 @@
 project_id = "xwnycyocprqdjerlxdue"
+
+[functions.robo-chat]
+verify_jwt = false
+
+[functions.robo-tts]
+verify_jwt = false
