@@ -37,15 +37,26 @@ const Menu = () => {
         <ModuleCard icon="🎮" title="משחק ידע" description="חידון כיף עם 5 שאלות" onClick={() => go("quiz")} delay={0.6} />
       </div>
 
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        onClick={() => navigate("/")}
-        className="mt-8 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        ← חזרה לבחירת גיל
-      </motion.button>
+      <div className="flex gap-4 mt-8">
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          onClick={() => navigate("/")}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← חזרה לבחירת גיל
+        </motion.button>
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.9 }}
+          onClick={() => navigate("/parent/auth")}
+          className="text-sm text-primary hover:opacity-80 transition-opacity font-medium"
+        >
+          👨‍👩‍👧 כניסת הורים
+        </motion.button>
+      </div>
     </div>
   );
 };
