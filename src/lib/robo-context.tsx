@@ -15,6 +15,15 @@ interface RoboContextType {
   addScore: (points: number) => void;
   childId: string | null;
   setChildId: (id: string | null) => void;
+  xp: number;
+  setXp: (xp: number) => void;
+  addXp: (amount: number) => void;
+  level: number;
+  setLevel: (level: number) => void;
+  totalCorrect: number;
+  setTotalCorrect: (n: number) => void;
+  earnedBadgeKeys: string[];
+  setEarnedBadgeKeys: (keys: string[]) => void;
 }
 
 const RoboContext = createContext<RoboContextType | undefined>(undefined);
@@ -25,9 +34,21 @@ export const RoboProvider = ({ children }: { children: ReactNode }) => {
   const [difficulty, setDifficulty] = useState<Difficulty>(null);
   const [score, setScore] = useState(0);
   const [childId, setChildId] = useState<string | null>(null);
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [totalCorrect, setTotalCorrect] = useState(0);
+  const [earnedBadgeKeys, setEarnedBadgeKeys] = useState<string[]>([]);
 
   return (
-    <RoboContext.Provider value={{ age, setAge, module, setModule, difficulty, setDifficulty, score, addScore: (p) => setScore((s) => s + p), childId, setChildId }}>
+    <RoboContext.Provider value={{
+      age, setAge, module, setModule, difficulty, setDifficulty,
+      score, addScore: (p) => setScore((s) => s + p),
+      childId, setChildId,
+      xp, setXp, addXp: (amount) => setXp((prev) => prev + amount),
+      level, setLevel,
+      totalCorrect, setTotalCorrect,
+      earnedBadgeKeys, setEarnedBadgeKeys,
+    }}>
       {children}
     </RoboContext.Provider>
   );
