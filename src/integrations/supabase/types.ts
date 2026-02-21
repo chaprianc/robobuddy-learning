@@ -14,30 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      badges: {
+        Row: {
+          badge_icon: string
+          badge_key: string
+          badge_name: string
+          child_id: string
+          earned_at: string
+          id: string
+        }
+        Insert: {
+          badge_icon?: string
+          badge_key: string
+          badge_name: string
+          child_id: string
+          earned_at?: string
+          id?: string
+        }
+        Update: {
+          badge_icon?: string
+          badge_key?: string
+          badge_name?: string
+          child_id?: string
+          earned_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badges_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       children: {
         Row: {
           age_group: string
           created_at: string
           id: string
+          level: number
           name: string
           parent_id: string
           screen_time_limit_minutes: number
+          xp: number
         }
         Insert: {
           age_group?: string
           created_at?: string
           id?: string
+          level?: number
           name: string
           parent_id: string
           screen_time_limit_minutes?: number
+          xp?: number
         }
         Update: {
           age_group?: string
           created_at?: string
           id?: string
+          level?: number
           name?: string
           parent_id?: string
           screen_time_limit_minutes?: number
+          xp?: number
         }
         Relationships: [
           {

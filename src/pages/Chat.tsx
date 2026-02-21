@@ -5,9 +5,13 @@ import { Send, ArrowRight, Loader2, Mic, MicOff, Volume2, VolumeX } from "lucide
 import RoboAvatar from "@/components/RoboAvatar";
 import ChatBubble from "@/components/ChatBubble";
 import StreakCounter from "@/components/StreakCounter";
+import XpLevelBar from "@/components/XpLevelBar";
+import XpPopup from "@/components/XpPopup";
+import BadgePopup from "@/components/BadgePopup";
 import { useRobo } from "@/lib/robo-context";
 import { useRoboTTS } from "@/hooks/use-robo-tts";
 import { supabase } from "@/integrations/supabase/client";
+import { getLevelFromXp, XP_REWARDS, checkNewBadges, type BadgeCheckStats } from "@/lib/xp-system";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -28,7 +32,7 @@ const moduleLabels: Record<string, string> = {
 };
 
 const Chat = () => {
-  const { age, module, difficulty, setModule, setDifficulty, setAge, childId } = useRobo();
+  const { age, module, difficulty, setModule, setDifficulty, setAge, childId, xp, addXp, setXp, level, setLevel, totalCorrect, setTotalCorrect, earnedBadgeKeys, setEarnedBadgeKeys } = useRobo();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -40,6 +44,32 @@ const Chat = () => {
   const { isTalking, speak, stop } = useRoboTTS();
   const [streak, setStreak] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [xpPopup, setXpPopup] = useState({ amount: 0, show: false });
+  const [badgePopup, setBadgePopup] = useState<{ name: string; icon: string } | null>(null);
+  const modulesPlayedRef = useRef<string[]>([]);
+
+  // Track modules played for badge checks
+  useEffect(() => {
+    if (module && !modulesPlayedRef.current.includes(module)) {
+      modulesPlayedRef.current.push(module);
+    }
+  }, [module]);
+
+  // Load XP from DB if childId available
+  useEffect(() => {
+    if (!childId) return;
+    (async () => {
+      const { data } = await supabase.from("children").select("xp, level").eq("id", childId).single();
+      if (data) {
+        setXp(data.xp);
+        setLevel(data.level);
+      }
+      // Load earned badges
+      const { data: badges } = await supabase.from("badges").select("badge_key").eq("child_id", childId);
+      if (badges) setEarnedBadgeKeys(badges.map((b: any) => b.badge_key));
+    })();
+  }, [childId]);
 
   useEffect(() => {
     if (!module) {
@@ -48,7 +78,6 @@ const Chat = () => {
     }
     const greeting = moduleGreetings[module] || "היי! אני רובו 🤖";
     setMessages([{ role: "assistant", content: greeting }]);
-    // Speak greeting
     if (autoSpeak) {
       speak(greeting);
     }
@@ -98,12 +127,65 @@ const Chat = () => {
         else setAge("13-14");
       }
 
-      // Detect streak tags
+      // Detect streak tags and award XP
       if (reply.includes("[CORRECT]")) {
+        const newTotalCorrect = totalCorrect + 1;
+        setTotalCorrect(newTotalCorrect);
+
         setStreak(prev => {
           const next = prev + 1;
           setShowCelebration(true);
           setTimeout(() => setShowCelebration(false), 1500);
+
+          // Calculate XP reward
+          let xpGain = XP_REWARDS.correct;
+          if (next >= 7) xpGain += XP_REWARDS.streak7;
+          else if (next >= 5) xpGain += XP_REWARDS.streak5;
+          else if (next >= 3) xpGain += XP_REWARDS.streak3;
+
+          const newXp = xp + xpGain;
+          addXp(xpGain);
+
+          // Show XP popup
+          setXpPopup({ amount: xpGain, show: true });
+          setTimeout(() => setXpPopup({ amount: 0, show: false }), 1500);
+
+          // Check level up
+          const newLevel = getLevelFromXp(newXp);
+          if (newLevel > level) {
+            setLevel(newLevel);
+            setShowLevelUp(true);
+            setTimeout(() => setShowLevelUp(false), 3000);
+          }
+
+          // Check badges
+          const stats: BadgeCheckStats = {
+            totalCorrect: newTotalCorrect,
+            highestStreak: Math.max(next, streak),
+            level: newLevel,
+            xp: newXp,
+            modulesPlayed: modulesPlayedRef.current,
+          };
+          const newBadges = checkNewBadges(stats, earnedBadgeKeys);
+          if (newBadges.length > 0) {
+            const allKeys = [...earnedBadgeKeys, ...newBadges.map(b => b.key)];
+            setEarnedBadgeKeys(allKeys);
+            // Show first new badge
+            setBadgePopup({ name: newBadges[0].name, icon: newBadges[0].icon });
+            setTimeout(() => setBadgePopup(null), 3000);
+            // Save badges to DB
+            if (childId) {
+              newBadges.forEach(b => {
+                supabase.from("badges").insert({ child_id: childId, badge_key: b.key, badge_name: b.name, badge_icon: b.icon }).then();
+              });
+            }
+          }
+
+          // Save XP to DB
+          if (childId) {
+            supabase.from("children").update({ xp: newXp, level: newLevel }).eq("id", childId).then();
+          }
+
           return next;
         });
       } else if (reply.includes("[WRONG]")) {
@@ -179,34 +261,43 @@ const Chat = () => {
   return (
     <div className="h-screen flex flex-col bg-gradient-to-b from-background to-muted">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-card border-b border-border shadow-sm">
-        <button onClick={() => {
-          saveMemory(messages, streak);
-          navigate(module === "free" ? "/" : "/menu");
-        }} className="text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowRight className="w-5 h-5" />
-        </button>
-        <RoboAvatar size="sm" animate={false} isTalking={isTalking} />
-        <div className="flex-1">
-          <p className="font-bold text-foreground text-sm">רובו 🤖</p>
-          <p className="text-xs text-muted-foreground">
-            {moduleLabels[module || ""] || ""}
-          </p>
+      <div className="flex flex-col px-4 py-3 bg-card border-b border-border shadow-sm gap-2">
+        <div className="flex items-center gap-3">
+          <button onClick={() => {
+            saveMemory(messages, streak);
+            navigate(module === "free" ? "/" : "/menu");
+          }} className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowRight className="w-5 h-5" />
+          </button>
+          <RoboAvatar size="sm" animate={false} isTalking={isTalking} />
+          <div className="flex-1">
+            <p className="font-bold text-foreground text-sm">רובו 🤖</p>
+            <p className="text-xs text-muted-foreground">
+              {moduleLabels[module || ""] || ""}
+            </p>
+          </div>
+          {module !== "free" && <StreakCounter streak={streak} showCelebration={showCelebration} />}
+          <button
+            onClick={() => {
+              setAutoSpeak(!autoSpeak);
+              if (autoSpeak) {
+                stop();
+              }
+            }}
+            className={`p-2 rounded-lg transition-colors ${autoSpeak ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+            title={autoSpeak ? "כבה קול" : "הפעל קול"}
+          >
+            {autoSpeak ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </button>
         </div>
-        {module !== "free" && <StreakCounter streak={streak} showCelebration={showCelebration} />}
-        <button
-          onClick={() => {
-            setAutoSpeak(!autoSpeak);
-            if (autoSpeak) {
-              stop();
-            }
-          }}
-          className={`p-2 rounded-lg transition-colors ${autoSpeak ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
-          title={autoSpeak ? "כבה קול" : "הפעל קול"}
-        >
-          {autoSpeak ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-        </button>
+        {module !== "free" && (
+          <XpLevelBar xp={xp} level={level} showLevelUp={showLevelUp} />
+        )}
       </div>
+
+      {/* Popups */}
+      <XpPopup amount={xpPopup.amount} show={xpPopup.show} />
+      <BadgePopup badge={badgePopup} />
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
