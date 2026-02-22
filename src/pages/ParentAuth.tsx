@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import RoboAvatar from "@/components/RoboAvatar";
 
-const PARENT_PIN = "1234";
+const getPin = () => localStorage.getItem("robo_parent_pin") || "1234";
 
 const ParentAuth = () => {
   const [pin, setPin] = useState("");
@@ -13,9 +13,9 @@ const ParentAuth = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (pin === PARENT_PIN) {
+    if (pin === getPin()) {
       sessionStorage.setItem("parent_auth", "true");
-      navigate("/parent");
+      navigate("/admin/settings");
     } else {
       setError("הפין שגוי, נסה שוב");
       setPin("");
