@@ -108,7 +108,7 @@ const Chat = () => {
     if (autoSpeak) {
       speak(greeting);
     }
-  }, [age, module, navigate]);
+  }, [module, navigate]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
