@@ -121,6 +121,17 @@ const Index = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Admin / Parent settings link */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
+        onClick={() => navigate("/parent/auth")}
+        className="fixed bottom-6 left-6 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors flex items-center gap-1"
+      >
+        ⚙️ הגדרות מנהל
+      </motion.button>
     </div>
   );
 };
