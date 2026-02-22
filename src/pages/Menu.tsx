@@ -62,6 +62,7 @@ const Menu = () => {
         <ModuleCard icon="📖" title="קריאה בעברית" description="אותיות, מילים ומשפטים" onClick={() => selectModule("reading")} delay={0.5} />
         <ModuleCard icon="🇬🇧" title="אנגלית" description="מילים ומשפטים באנגלית" onClick={() => selectModule("english")} delay={0.6} />
         <ModuleCard icon="🎮" title="חידון ידע" description="חידון כיף עם 5 שאלות" onClick={() => selectModule("quiz")} delay={0.7} />
+        <ModuleCard icon="📖✨" title="סיפור אינטראקטיבי" description="רובו מספר סיפור ואתה בוחר מה קורה!" onClick={() => navigate("/story")} delay={0.8} />
       </div>
 
       <div className="flex gap-4 mt-8 flex-wrap justify-center">
