@@ -9,6 +9,7 @@ import Menu from "./pages/Menu";
 import Chat from "./pages/Chat";
 import ParentAuth from "./pages/ParentAuth";
 import ParentDashboard from "./pages/ParentDashboard";
+import AdminSettings from "./pages/AdminSettings";
 import Badges from "./pages/Badges";
 import Story from "./pages/Story";
 import NotFound from "./pages/NotFound";
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/story" element={<Story />} />
             <Route path="/parent/auth" element={<ParentAuth />} />
             <Route path="/parent" element={<ParentDashboard />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
