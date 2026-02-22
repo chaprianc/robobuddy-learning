@@ -10,6 +10,7 @@ import Chat from "./pages/Chat";
 import ParentAuth from "./pages/ParentAuth";
 import ParentDashboard from "./pages/ParentDashboard";
 import Badges from "./pages/Badges";
+import Story from "./pages/Story";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/menu" element={<Menu />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/badges" element={<Badges />} />
+            <Route path="/story" element={<Story />} />
             <Route path="/parent/auth" element={<ParentAuth />} />
             <Route path="/parent" element={<ParentDashboard />} />
             <Route path="*" element={<NotFound />} />
