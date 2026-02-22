@@ -27,6 +27,7 @@ const ChatBubble = ({ message, isUser, onModuleSwitch }: ChatBubbleProps) => {
     .replace(/\[CORRECT\]/g, "")
     .replace(/\[WRONG\]/g, "")
     .replace(/\[AGE:\d+\]/g, "")
+    .replace(/\[MOOD:\w+\]/g, "")
     .trim();
 
   const speak = useCallback(() => {

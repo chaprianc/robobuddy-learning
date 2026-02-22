@@ -15,6 +15,32 @@ import { getLevelFromXp, XP_REWARDS, checkNewBadges, type BadgeCheckStats } from
 
 type Msg = { role: "user" | "assistant"; content: string };
 
+const MOOD_CONFIG: Record<string, { emoji: string; label: string; color: string }> = {
+  happy: { emoji: "😊", label: "שמח", color: "text-chart-3" },
+  excited: { emoji: "🤩", label: "נלהב", color: "text-chart-4" },
+  sad: { emoji: "😢", label: "עצוב", color: "text-chart-2" },
+  frustrated: { emoji: "😤", label: "מתוסכל", color: "text-destructive" },
+  tired: { emoji: "😴", label: "עייף", color: "text-muted-foreground" },
+  neutral: { emoji: "😐", label: "רגוע", color: "text-muted-foreground" },
+};
+
+const MoodIndicator = ({ mood }: { mood: string }) => {
+  const config = MOOD_CONFIG[mood] || MOOD_CONFIG.neutral;
+  if (mood === "neutral") return null;
+  return (
+    <motion.span
+      key={mood}
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", damping: 10 }}
+      className={`text-xs ${config.color} flex items-center gap-0.5`}
+      title={`מצב רוח: ${config.label}`}
+    >
+      <span>{config.emoji}</span>
+    </motion.span>
+  );
+};
+
 const moduleGreetings: Record<string, string> = {
   math: "שלום! 🔢 אני רובו! בוא נתרגל חשבון ביחד. אני אתן לך תרגילים ואעזור לך להצליח! מוכן?",
   reading: "שלום! 📖 אני רובו! בוא נקרא ונלמד מילים חדשות ביחד! מוכן להתחיל?",
@@ -47,6 +73,7 @@ const Chat = () => {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [xpPopup, setXpPopup] = useState({ amount: 0, show: false });
   const [badgePopup, setBadgePopup] = useState<{ name: string; icon: string } | null>(null);
+  const [currentMood, setCurrentMood] = useState<string>("neutral");
   const modulesPlayedRef = useRef<string[]>([]);
 
   // Track modules played for badge checks
@@ -125,6 +152,12 @@ const Chat = () => {
         else if (ageNum <= 9) setAge("7-9");
         else if (ageNum <= 12) setAge("10-12");
         else setAge("13-14");
+      }
+
+      // Detect mood tag
+      const moodMatch = reply.match(/\[MOOD:(\w+)\]/);
+      if (moodMatch) {
+        setCurrentMood(moodMatch[1]);
       }
 
       // Detect streak tags and award XP
@@ -271,7 +304,10 @@ const Chat = () => {
           </button>
           <RoboAvatar size="sm" animate={false} isTalking={isTalking} />
           <div className="flex-1">
-            <p className="font-bold text-foreground text-sm">רובו 🤖</p>
+            <div className="flex items-center gap-2">
+              <p className="font-bold text-foreground text-sm">רובו 🤖</p>
+              <MoodIndicator mood={currentMood} />
+            </div>
             <p className="text-xs text-muted-foreground">
               {moduleLabels[module || ""] || ""}
             </p>
