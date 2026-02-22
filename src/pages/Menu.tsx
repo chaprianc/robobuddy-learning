@@ -64,7 +64,7 @@ const Menu = () => {
         <ModuleCard icon="🎮" title="חידון ידע" description="חידון כיף עם 5 שאלות" onClick={() => selectModule("quiz")} delay={0.7} />
       </div>
 
-      <div className="flex gap-4 mt-8">
+      <div className="flex gap-4 mt-8 flex-wrap justify-center">
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -73,6 +73,15 @@ const Menu = () => {
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           ← חזרה לבחירת גיל
+        </motion.button>
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.95 }}
+          onClick={() => navigate("/badges")}
+          className="text-sm text-primary hover:opacity-80 transition-opacity font-medium"
+        >
+          🏆 אוסף התגים
         </motion.button>
         <motion.button
           initial={{ opacity: 0 }}
