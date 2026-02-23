@@ -28,6 +28,26 @@ const RoboAvatar = ({ size = "md", animate = true, isTalking = false }: RoboAvat
         animate={isTalking ? { scale: [1, 1.03, 1] } : undefined}
         transition={isTalking ? { duration: 0.35, repeat: Infinity } : undefined} />
 
+      {/* Animated mouth overlay */}
+      {isTalking && (
+        <div className="absolute bottom-[22%] left-1/2 -translate-x-1/2 flex items-center justify-center">
+          <motion.div
+            className="bg-foreground/80 rounded-full"
+            animate={{
+              width: ["12%", "18%", "10%", "20%", "14%"],
+              height: ["4px", "10px", "3px", "12px", "5px"],
+              borderRadius: ["9999px", "30%", "9999px", "40%", "9999px"],
+            }}
+            transition={{
+              duration: 0.4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            style={{ width: "14%", height: "6px" }}
+          />
+        </div>
+      )}
+
     </motion.div>);
 
 };
