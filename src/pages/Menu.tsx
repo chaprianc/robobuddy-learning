@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import RoboAvatar from "@/components/RoboAvatar";
 import ModuleCard from "@/components/ModuleCard";
+import DailyChallengeCard from "@/components/DailyChallengeCard";
 import { useRobo } from "@/lib/robo-context";
 import { useRoboTTS } from "@/hooks/use-robo-tts";
 
@@ -56,6 +57,8 @@ const Menu = () => {
       >
         מה תרצה ללמוד היום? 😊
       </motion.p>
+
+      <DailyChallengeCard onStart={(mod) => selectModule(mod)} />
 
       <div className="w-full max-w-sm space-y-4">
         <ModuleCard icon="🔢" title="חשבון" description="חיבור, חיסור, כפל ועוד תרגילים" onClick={() => selectModule("math")} delay={0.4} />
