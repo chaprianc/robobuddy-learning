@@ -8,6 +8,7 @@ import StreakCounter from "@/components/StreakCounter";
 import XpLevelBar from "@/components/XpLevelBar";
 import XpPopup from "@/components/XpPopup";
 import BadgePopup from "@/components/BadgePopup";
+import FireworksOverlay from "@/components/FireworksOverlay";
 import { useRobo } from "@/lib/robo-context";
 import { useRoboTTS } from "@/hooks/use-robo-tts";
 import { supabase } from "@/integrations/supabase/client";
@@ -344,6 +345,7 @@ const Chat = () => {
       {/* Popups */}
       <XpPopup amount={xpPopup.amount} show={xpPopup.show} />
       <BadgePopup badge={badgePopup} />
+      <FireworksOverlay show={challengeComplete} />
       
       {/* Daily Challenge Complete */}
       <AnimatePresence>
