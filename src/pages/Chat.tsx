@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Send, ArrowRight, Loader2, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import RoboAvatar from "@/components/RoboAvatar";
 import ChatBubble from "@/components/ChatBubble";
@@ -12,6 +12,7 @@ import { useRobo } from "@/lib/robo-context";
 import { useRoboTTS } from "@/hooks/use-robo-tts";
 import { supabase } from "@/integrations/supabase/client";
 import { getLevelFromXp, XP_REWARDS, checkNewBadges, type BadgeCheckStats } from "@/lib/xp-system";
+import { recordChallengeProgress } from "@/lib/daily-challenge";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -73,6 +74,7 @@ const Chat = () => {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [xpPopup, setXpPopup] = useState({ amount: 0, show: false });
   const [badgePopup, setBadgePopup] = useState<{ name: string; icon: string } | null>(null);
+  const [challengeComplete, setChallengeComplete] = useState(false);
   const [currentMood, setCurrentMood] = useState<string>("neutral");
   const modulesPlayedRef = useRef<string[]>([]);
 
@@ -175,6 +177,14 @@ const Chat = () => {
           if (next >= 7) xpGain += XP_REWARDS.streak7;
           else if (next >= 5) xpGain += XP_REWARDS.streak5;
           else if (next >= 3) xpGain += XP_REWARDS.streak3;
+
+          // Daily challenge progress
+          const challengeResult = recordChallengeProgress(module || "");
+          if (challengeResult.completed) {
+            xpGain += challengeResult.bonusXp;
+            setChallengeComplete(true);
+            setTimeout(() => setChallengeComplete(false), 4000);
+          }
 
           const newXp = xp + xpGain;
           addXp(xpGain);
@@ -334,6 +344,25 @@ const Chat = () => {
       {/* Popups */}
       <XpPopup amount={xpPopup.amount} show={xpPopup.show} />
       <BadgePopup badge={badgePopup} />
+      
+      {/* Daily Challenge Complete */}
+      <AnimatePresence>
+        {challengeComplete && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 pointer-events-none"
+          >
+            <div className="bg-card rounded-3xl p-6 shadow-2xl text-center border-2 border-accent">
+              <div className="text-5xl mb-3">🏆</div>
+              <h2 className="text-xl font-bold text-foreground">אתגר יומי הושלם!</h2>
+              <p className="text-accent-foreground font-bold mt-2">+20 XP בונוס! ⚡</p>
+              <p className="text-sm text-muted-foreground mt-1">כל הכבוד! חזור מחר לאתגר חדש!</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
